@@ -1,0 +1,5 @@
+[workspace]
+members = ["ege-runtime", "ege-transpiler"]
+resolver = "2"
+
+[workspace.dependencies]
