@@ -6,9 +6,10 @@ fn main() {
 
     let file = std::fs::File::open("test.bb").unwrap();
 
-    let mut lexer = lexer::Tokenizer::new(file);
+    let lexer = lexer::Tokenizer::new(file);
+    let mut parser = parser::Parser::new(lexer);
 
-    while let Some(token) = lexer.next_token().unwrap() {
-        println!("TOKEN: {token:?}");
-    }
+    let program = parser.parse_program().unwrap();
+
+    println!("PROGRAM: {program:?}");
 }

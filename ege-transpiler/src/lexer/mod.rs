@@ -12,25 +12,38 @@ const KEYWORDS: [&str; 33] = [
     "Print", "AppTitle", "Graphics", "Cls", "Text", // Function-like keywords
 ];
 
-const OPERATORS: [&str; 15] = [
-    "(", ")", "=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^", ",", ".",
+const OPERATORS: [&str; 16] = [
+    "(", ")", "=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^", ",", ".", "\\",
 ];
 
 const IDENT_STRING_SUFFIX: char = '$';
 const IDENT_FLOAT_SUFFIX: char = '#';
 const IDENT_INT_SUFFIX: char = '%';
+const IDENT_TYPE_SUFFIX: char = '.';
 
 #[derive(Clone, Debug)]
 pub enum IdentTyping {
     String,
     Float,
     Integer,
+    Type(String),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TokenTypeId {
+    Keyword,
+    Ident,
+    Operator,
+    StringLiteral,
+    IntegerLiteral,
+    FloatLiteral,
+    EndOfLine,
 }
 
 #[derive(Clone, Debug)]
 pub enum TokenType {
     Keyword,
-    Ident(IdentTyping),
+    Ident(Option<IdentTyping>),
     Operator,
     StringLiteral,
     IntegerLiteral(i64),
@@ -38,10 +51,25 @@ pub enum TokenType {
     EndOfLine,
 }
 
+impl TokenType {
+    #[inline]
+    pub fn to_id(&self) -> TokenTypeId {
+        match self {
+            TokenType::Keyword => TokenTypeId::Keyword,
+            TokenType::Ident(_) => TokenTypeId::Ident,
+            TokenType::Operator => TokenTypeId::Operator,
+            TokenType::StringLiteral => TokenTypeId::StringLiteral,
+            TokenType::IntegerLiteral(_) => TokenTypeId::IntegerLiteral,
+            TokenType::FloatLiteral(_) => TokenTypeId::FloatLiteral,
+            TokenType::EndOfLine => TokenTypeId::EndOfLine,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Token {
-    content: String,
-    token_type: TokenType,
+    pub content: String,
+    pub token_type: TokenType,
 }
 
 pub struct Tokenizer<R: Read> {
@@ -111,11 +139,18 @@ impl<R: Read> Tokenizer<R> {
         }
 
         let token_type = match self.current_char()? {
-            Some(IDENT_STRING_SUFFIX) => TokenType::Ident(IdentTyping::String),
-            Some(IDENT_FLOAT_SUFFIX) => TokenType::Ident(IdentTyping::Float),
-            Some(IDENT_INT_SUFFIX) => TokenType::Ident(IdentTyping::Integer),
+            Some(IDENT_STRING_SUFFIX) => TokenType::Ident(Some(IdentTyping::String)),
+            Some(IDENT_FLOAT_SUFFIX) => TokenType::Ident(Some(IdentTyping::Float)),
+            Some(IDENT_INT_SUFFIX) => TokenType::Ident(Some(IdentTyping::Integer)),
+            Some(IDENT_TYPE_SUFFIX) => TokenType::Ident(Some(IdentTyping::Type({
+                self.next_char()?;
+
+                // FIXME: Generate error when the Ident has a typing
+
+                self.handle_word()?.content
+            }))),
             _ if KEYWORDS.contains(&word_buffer.as_str()) => TokenType::Keyword,
-            _ => TokenType::Ident(IdentTyping::Integer),
+            _ => TokenType::Ident(None),
         };
 
         self.next_char()?;

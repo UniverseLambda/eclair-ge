@@ -1,4 +1,4 @@
-; Code taken from the Wikipedia page for BlitzBasic
+; Code taken from the Wikipedia page for BlitzBasic (but fix some issues)
 
 AppTitle "Binary Clock"
 Graphics 150,80,16,3
@@ -9,7 +9,7 @@ secondtimer=CreateTimer(2)
 
 Repeat
  	Hour = Left(CurrentTime$(),2)
- 	Minute = Mid(CurrentTime$(),4,2)
+ 	Minute = Mid(CurrentTime$(),3,2)
  	Second = Right(CurrentTime$(),2)
 
  	If Hour >= 12 Then PM = 1
