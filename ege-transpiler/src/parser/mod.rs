@@ -1,7 +1,9 @@
 use std::io::Read;
 
-use anyhow::{bail, Context, Result};
-use ast_type::{BinaryExpr, BinaryExprOp, Expr, Ident, Program, RepeatLoop, Statement};
+use anyhow::{bail, Context, Ok, Result};
+use ast_type::{
+    BinaryExpr, BinaryExprOp, Expr, Ident, Program, RepeatLoop, Statement, VarAssign, VarScope,
+};
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
 
@@ -50,8 +52,7 @@ impl<R: Read> Parser<R> {
                 todo!()
             }
             (TokenType::Keyword, "Local" | "Global") => {
-                /* TODO: Var assign parsing */
-                todo!()
+                self.parse_var_assign().map(Statement::VarAssign)?
             }
             (TokenType::Keyword, "If") => {
                 /* TODO: If parsing */
@@ -77,16 +78,60 @@ impl<R: Read> Parser<R> {
         };
 
         match peeked.content.as_str() {
-            "=" => {
-                /* TODO: Var assign parsing */
-                todo!()
-            }
+            "=" => self.parse_var_assign().map(|v| Statement::VarAssign(v)),
             "(" => {
                 /* TODO: Function call parsing */
                 todo!()
             }
             v => bail!("Unexpected token: `{v}` (type: {:?})", peeked.token_type),
         }
+    }
+
+    fn parse_var_assign(&mut self) -> Result<VarAssign> {
+        let first_token = self.required_token()?;
+
+        let scope = if let TokenType::Keyword = first_token.token_type {
+            self.next_token()?;
+
+            match first_token.content.as_str() {
+                "Global" => Some(VarScope::Global),
+                "Local" => Some(VarScope::Local),
+                v => bail!("Unexpected token: {v}, expected Global or Local"),
+            }
+        } else {
+            None
+        };
+
+        let ident_token = self.required_token()?;
+        self.expect_token_type(&ident_token, TokenTypeId::Ident)?;
+
+        let TokenType::Ident(ident_typing) = ident_token.token_type else {
+            unreachable!()
+        };
+
+        let mut res = VarAssign {
+            name: Ident {
+                name: ident_token.content,
+                ident_type: ident_typing,
+            },
+            scope,
+            value: None,
+        };
+
+        let Some(operator) = self.next_token()? else {
+            return Ok(res);
+        };
+
+        if let TokenType::EndOfLine = operator.token_type {
+            return Ok(res);
+        }
+
+        self.expect_token(&operator, TokenTypeId::Operator, "=")?;
+        self.consume_token();
+
+        res.value = Some(self.parse_expr()?);
+
+        Ok(res)
     }
 
     fn parse_repeat(&mut self) -> Result<RepeatLoop> {
@@ -275,6 +320,14 @@ impl<R: Read> Parser<R> {
         }
     }
 
+    pub fn required_token(&mut self) -> Result<Token> {
+        if let Some(token) = self.current_token()? {
+            Ok(token)
+        } else {
+            self.unexpected_eof()
+        }
+    }
+
     pub fn next_token(&mut self) -> Result<Option<Token>> {
         self._current_token = self._peeked_token.take();
 
@@ -300,6 +353,14 @@ impl<R: Read> Parser<R> {
             .next_token()
             .inspect(|token| println!("TOKEN: {token:?}"))
             .with_context(|| "Parser::read_token")
+    }
+
+    fn expect_token(&self, token: &Token, tktype: TokenTypeId, content: &str) -> Result<()> {
+        if token.token_type.to_id() == tktype && token.content == content {
+            Ok(())
+        } else {
+            bail!("Unexpected token: {token:?}, expected: {content:?} (type: {tktype:?})");
+        }
     }
 
     fn expect_token_type(&self, token: &Token, tktype: TokenTypeId) -> Result<()> {

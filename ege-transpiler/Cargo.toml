@@ -3,6 +3,11 @@ name = "ege-transpiler"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["llvm18"]
+llvm18 = ["inkwell/llvm18-0"]
+llvm12 = ["inkwell/llvm12-0"]
+
 [dependencies]
 anyhow = "1.0"
-inkwell = { version = "0.5", features = ["llvm12-0"] }
+inkwell = { version = "0.5" }

@@ -117,9 +117,10 @@ pub struct BinaryExpr {
     pub op: BinaryExprOp,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum VarScope {
     Global,
+    #[default]
     Local,
 }
 

@@ -1,5 +1,6 @@
 ; Code taken from the Wikipedia page for BlitzBasic (but fix some issues)
 
+; Those two will be treated as `AppTile("Binary Clock")` and `Graphics(150,80,16,3)`
 AppTitle "Binary Clock"
 Graphics 150,80,16,3
 
