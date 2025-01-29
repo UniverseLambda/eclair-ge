@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader, Read},
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 
 const KEYWORDS: [&str; 33] = [
     "Global", "Local", "If", "Then", "ElseIf", "Else", "EndIf", "Include", "While", "Wend",
@@ -18,13 +18,16 @@ const OPERATORS: [&str; 15] = [
 
 const IDENT_STRING_SUFFIX: char = '$';
 const IDENT_FLOAT_SUFFIX: char = '#';
+const IDENT_INT_SUFFIX: char = '%';
 
+#[derive(Clone, Debug)]
 pub enum IdentTyping {
     String,
     Float,
     Integer,
 }
 
+#[derive(Clone, Debug)]
 pub enum TokenType {
     Keyword,
     Ident(IdentTyping),
@@ -35,6 +38,7 @@ pub enum TokenType {
     EndOfLine,
 }
 
+#[derive(Clone, Debug)]
 pub struct Token {
     content: String,
     token_type: TokenType,
@@ -79,6 +83,7 @@ impl<R: Read> Tokenizer<R> {
         } else if current_char.is_numeric() {
             self.handle_number()
         } else if current_char == '\n' {
+            self.next_char()?;
             Ok(Token {
                 content: "\n".to_string(),
                 token_type: TokenType::EndOfLine,
@@ -108,9 +113,12 @@ impl<R: Read> Tokenizer<R> {
         let token_type = match self.current_char()? {
             Some(IDENT_STRING_SUFFIX) => TokenType::Ident(IdentTyping::String),
             Some(IDENT_FLOAT_SUFFIX) => TokenType::Ident(IdentTyping::Float),
+            Some(IDENT_INT_SUFFIX) => TokenType::Ident(IdentTyping::Integer),
             _ if KEYWORDS.contains(&word_buffer.as_str()) => TokenType::Keyword,
             _ => TokenType::Ident(IdentTyping::Integer),
         };
+
+        self.next_char()?;
 
         Ok(Token {
             content: word_buffer,
@@ -150,6 +158,42 @@ impl<R: Read> Tokenizer<R> {
     fn handle_number(&mut self) -> Result<Token> {
         let mut is_float = false;
         let mut number_buffer = String::new();
+
+        let initial_number = self.current_char()?;
+
+        if !initial_number.map_or(false, |c| c.is_digit(10)) {
+            bail!(
+                "handle_number called but current_char is not a digit (found {initial_number:?})"
+            );
+        }
+
+        number_buffer.push(initial_number.unwrap());
+
+        while let Some(zarma) = self.next_char()? {
+            if zarma.is_digit(10) {
+                number_buffer.push(zarma);
+            } else if zarma == '.' {
+                if is_float {
+                    bail!("handle_number encountered multiple . in a float number")
+                }
+
+                number_buffer.push(zarma);
+                is_float = true;
+            } else {
+                break;
+            }
+        }
+
+        let token_type = if is_float {
+            TokenType::FloatLiteral(number_buffer.parse()?)
+        } else {
+            TokenType::IntegerLiteral(number_buffer.parse()?)
+        };
+
+        Ok(Token {
+            content: number_buffer,
+            token_type,
+        })
     }
 
     fn handle_operator(&mut self) -> Result<Token> {
@@ -171,9 +215,11 @@ impl<R: Read> Tokenizer<R> {
             }
         }
 
-        for idx in match_start {
-            if let Some(next_char) = self.next_char()? {
+        if let Some(next_char) = self.next_char()? {
+            for idx in match_start {
                 if OPERATORS[idx].ends_with(next_char) {
+                    self.next_char()?;
+
                     return Ok(Token {
                         content: OPERATORS[idx].to_string(),
                         token_type: TokenType::Operator,
