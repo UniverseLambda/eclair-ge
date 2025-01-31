@@ -32,6 +32,7 @@ impl<R: Read> Parser<R> {
             .parse_statement()
             .with_context(|| "Parser::parse_program")?
         {
+            println!("Statement: {statement:?}");
             statements.push(statement);
         }
 
@@ -45,7 +46,14 @@ impl<R: Read> Parser<R> {
             return Ok(None);
         };
 
-        self.expect_any_token_type(&disc, &[TokenTypeId::Keyword, TokenTypeId::Ident])?;
+        self.expect_any_token_type(
+            &disc,
+            &[
+                TokenTypeId::Keyword,
+                TokenTypeId::Ident,
+                TokenTypeId::FunctionKeyword,
+            ],
+        )?;
 
         let statement = match (disc.token_type, disc.content.as_str()) {
             (TokenType::Keyword, "Function") => {
@@ -65,7 +73,9 @@ impl<R: Read> Parser<R> {
             }
             (TokenType::Keyword, "Repeat") => Statement::Repeat(self.parse_repeat()?),
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
-            (TokenType::FunctionKeyword, _) => self.parse_function()?,
+            (TokenType::FunctionKeyword, _) => self
+                .parse_function_call()
+                .map(|v| Statement::FunctionCall(v))?,
             (t, v) => bail!("Unexpected token: `{v}` (type: {t:?})"),
         };
 
@@ -73,6 +83,12 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_statement_from_ident(&mut self) -> Result<Statement> {
+        println!(
+            "parse_statement_from_ident: current_token: {:?}, peeked: {:?}",
+            self.current_token()?,
+            self.peek_token()?
+        );
+
         let Some(peeked) = self.peek_token()? else {
             return self
                 .unexpected_eof()
@@ -81,31 +97,88 @@ impl<R: Read> Parser<R> {
 
         match peeked.content.as_str() {
             "=" => self.parse_var_assign().map(|v| Statement::VarAssign(v)),
-            "(" => {
-                /* TODO: Function call parsing */
-                todo!()
-            }
+            "(" => self
+                .parse_function_call()
+                .map(|v| Statement::FunctionCall(v)),
             v => bail!("Unexpected token: `{v}` (type: {:?})", peeked.token_type),
         }
     }
 
-    fn parse_function(&mut self) -> Result<FunctionCall> {
+    fn parse_ident(&mut self) -> Result<Ident> {
         let ident = self.required_token()?;
 
-        let mut first_expr = self.required_next_token()?;
+        self.expect_any_token_type(&ident, &[TokenTypeId::Ident, TokenTypeId::FunctionKeyword])?;
 
-        let ends_with_parenth = if first_expr.is(TokenTypeId::Operator, "(") {
-            first_expr = self.required_next_token()?;
+        let ident_type = match ident.token_type {
+            TokenType::Ident(ident_type) => ident_type,
+            TokenType::FunctionKeyword => None,
+            _ => unreachable!(),
+        };
+
+        Ok(Ident {
+            name: ident.content,
+            ident_type,
+        })
+    }
+
+    fn parse_function_call(&mut self) -> Result<FunctionCall> {
+        println!(
+            "parse_function_call: current_token: {:?}, peeked: {:?}",
+            self.current_token()?,
+            self.peek_token()?
+        );
+
+        let ident = self.parse_ident()?;
+
+        let mut expr_start = self.required_next_token()?;
+
+        let ends_with_parenth = if expr_start.is(TokenTypeId::Operator, "(") {
+            self.consume_token();
 
             true
         } else {
             false
         };
 
-        todo!()
+        let mut params = Vec::new();
+
+        loop {
+            let Some(expr_start) = self.current_token()? else {
+                break;
+            };
+
+            if (ends_with_parenth && expr_start.is(TokenTypeId::Operator, ")"))
+                || expr_start.is(TokenTypeId::EndOfLine, "\n")
+            {
+                break;
+            }
+
+            params.push(self.parse_expr()?);
+
+            if let Some(token) = self.current_token()? {
+                if token.is(TokenTypeId::Operator, ",") {
+                    self.consume_token();
+                }
+            }
+        }
+
+        if ends_with_parenth {
+            let parenth = self.required_token()?;
+
+            self.expect_token(&parenth, TokenTypeId::Operator, ")")?;
+            self.consume_token();
+        }
+
+        Ok(FunctionCall { ident, params })
     }
 
     fn parse_var_assign(&mut self) -> Result<VarAssign> {
+        println!(
+            "parse_expr: current_token: {:?}, peeked: {:?}",
+            self.current_token()?,
+            self.peek_token()?
+        );
+
         let first_token = self.required_token()?;
 
         let scope = if let TokenType::Keyword = first_token.token_type {
@@ -225,16 +298,21 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_expr(&mut self) -> Result<Expr> {
+        println!(
+            "parse_expr: current_token: {:?}, peeked: {:?}",
+            self.current_token()?,
+            self.peek_token()?
+        );
+
         let mut current_expr: Expr = self.parse_expr_single_pass()?;
         current_expr = self.might_be_a_func_call(current_expr)?;
 
         loop {
-            let Some(token) = self.next_token().with_context(|| "Parser::parse_expr")? else {
+            let Some(token) = self.current_token().with_context(|| "Parser::parse_expr")? else {
                 break;
             };
 
             if let TokenType::EndOfLine = token.token_type {
-                self.consume_token();
                 break;
             }
 
@@ -272,6 +350,12 @@ impl<R: Read> Parser<R> {
     }
 
     fn might_be_a_func_call(&mut self, current_expr: Expr) -> Result<Expr> {
+        println!(
+            "might_be_a_func_call: current_token: {:?}, peeked: {:?}",
+            self.current_token()?,
+            self.peek_token()?
+        );
+
         if let Expr::Variable(ident) = current_expr {
             let Some(peeked_token) = self.peek_token()? else {
                 self.consume_token();
@@ -282,8 +366,7 @@ impl<R: Read> Parser<R> {
             if peeked_token.token_type.to_id() == TokenTypeId::Operator
                 && peeked_token.content == "("
             {
-                /* TODO: parse function call */
-                todo!()
+                self.parse_function_call().map(|v| Expr::Function(v))
             } else {
                 self.consume_token();
 
@@ -298,6 +381,11 @@ impl<R: Read> Parser<R> {
 
     // This function doesn't consume its last token.
     fn parse_expr_single_pass(&mut self) -> Result<Expr> {
+        println!(
+            "parse_expr_single_pass: current_token: {:#?}",
+            self.current_token()?,
+        );
+
         // At first we either have:
         // - an int: 42
         // - a float: 3.14
@@ -309,6 +397,11 @@ impl<R: Read> Parser<R> {
         // So we just ignore it because fuck it
 
         // FIXME: Handle expressions that might be starting with keywords like "Not"
+
+        println!(
+            "POST parse_expr_single_pass: current_token: {:#?}",
+            self.current_token()?,
+        );
 
         let Some(current_token) = self
             .current_token()
@@ -327,7 +420,7 @@ impl<R: Read> Parser<R> {
     }
 
     pub fn consume_token(&mut self) {
-        self._current_token.take();
+        self._current_token = self._peeked_token.take();
     }
 
     pub fn current_token(&mut self) -> Result<Option<Token>> {

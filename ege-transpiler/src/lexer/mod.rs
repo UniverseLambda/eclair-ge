@@ -22,6 +22,13 @@ const IDENT_FLOAT_SUFFIX: char = '#';
 const IDENT_INT_SUFFIX: char = '%';
 const IDENT_TYPE_SUFFIX: char = '.';
 
+const IDENT_SUFFIXES: [char; 4] = [
+    IDENT_STRING_SUFFIX,
+    IDENT_FLOAT_SUFFIX,
+    IDENT_INT_SUFFIX,
+    IDENT_TYPE_SUFFIX,
+];
+
 #[derive(Clone, Debug)]
 pub enum IdentTyping {
     String,
@@ -164,7 +171,14 @@ impl<R: Read> Tokenizer<R> {
             _ => TokenType::Ident(None),
         };
 
-        self.next_char()?;
+        if let TokenType::Ident(Some(ref v)) = token_type {
+            match v {
+                IdentTyping::Type(_) => {}
+                _ => {
+                    self.next_char()?;
+                }
+            }
+        }
 
         Ok(Token {
             content: word_buffer,
