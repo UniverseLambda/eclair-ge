@@ -2,8 +2,8 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    BinaryExpr, BinaryExprOp, Expr, FunctionCall, Ident, Program, RepeatLoop, Statement, VarAssign,
-    VarScope,
+    BinaryExpr, BinaryExprOp, Expr, FunctionCall, Ident, If, Otherwise, Program, RepeatLoop,
+    Statement, VarAssign, VarScope,
 };
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
@@ -63,10 +63,7 @@ impl<R: Read> Parser<R> {
             (TokenType::Keyword, "Local" | "Global") => {
                 self.parse_var_assign().map(Statement::VarAssign)?
             }
-            (TokenType::Keyword, "If") => {
-                /* TODO: If parsing */
-                todo!()
-            }
+            (TokenType::Keyword, "If") => self.parse_if().map(Statement::If)?,
             (TokenType::Keyword, "For") => {
                 /* TODO: For parsing */
                 todo!()
@@ -121,6 +118,88 @@ impl<R: Read> Parser<R> {
         })
     }
 
+    fn parse_if(&mut self) -> Result<If> {
+        println!(
+            "parse_if: current_token: {:?}, peeked: {:?}",
+            self.current_token()?,
+            self.peek_token()?
+        );
+
+        let if_operator = self.required_token()?;
+        self.expect_token(&if_operator, TokenTypeId::Keyword, "If")?;
+        self.consume_token();
+
+        let mut has_else = false;
+        let mut blocks: Vec<(Expr, Vec<Statement>)> = Vec::new();
+        let mut else_statements: Vec<Statement> = Vec::new();
+
+        loop {
+            let cond;
+
+            if !has_else {
+                cond = self.parse_expr()?;
+
+                let then_keyword = self.required_token()?;
+                self.expect_token(&then_keyword, TokenTypeId::Keyword, "Then")?;
+            } else {
+                cond = Expr::Integer(1)
+            }
+
+            let next_token = self.required_next_token()?;
+            if !next_token.is(TokenTypeId::EndOfLine, "\n") {
+                // UNWRAP: We know we have something else. So it will either be an error, or a statement, but not nothing.
+                let statement = self.parse_statement()?.unwrap();
+
+                if has_else {
+                    else_statements = vec![statement];
+                } else {
+                    blocks.push((cond, vec![statement]));
+                }
+
+                break;
+            }
+
+            let stoppers: &[&str] = if has_else { &[] } else { &["ElseIf", "Else"] };
+
+            self.consume_token();
+            let (if_statement_block, stopper) =
+                self.parse_statement_block("If", false, stoppers)?;
+
+            if has_else {
+                else_statements = if_statement_block;
+            } else {
+                blocks.push((cond, if_statement_block));
+            }
+
+            if stopper == "Else" {
+                has_else = true;
+            } else if stopper != "ElseIf" {
+                break;
+            }
+        }
+
+        let (if_expr, if_statements) = blocks.remove(0);
+
+        let mut otherwises: Vec<Otherwise> = blocks
+            .drain(..)
+            .map(|(cond, statements)| Otherwise::ElseIf { cond, statements })
+            .collect();
+
+        if has_else {
+            let last = otherwises.last_mut().unwrap();
+
+            *last = Otherwise::Else {
+                statements: last.statements().to_vec(),
+            };
+        }
+
+        Ok(If {
+            cond: if_expr,
+            statements: if_statements,
+            else_if: otherwises,
+        })
+    }
+
     fn parse_function_call(&mut self) -> Result<FunctionCall> {
         println!(
             "parse_function_call: current_token: {:?}, peeked: {:?}",
@@ -130,7 +209,7 @@ impl<R: Read> Parser<R> {
 
         let ident = self.parse_ident()?;
 
-        let mut expr_start = self.required_next_token()?;
+        let expr_start = self.required_next_token()?;
 
         let ends_with_parenth = if expr_start.is(TokenTypeId::Operator, "(") {
             self.consume_token();
@@ -235,8 +314,8 @@ impl<R: Read> Parser<R> {
 
         self.expect_token_type(&lf, TokenTypeId::EndOfLine)?;
 
-        let statements = self
-            .parse_statement_block("Forever", true)
+        let (statements, _) = self
+            .parse_statement_block("Forever", true, &[])
             .with_context(|| "Parser::parse_repeat")?;
 
         Ok(RepeatLoop { statements })
@@ -246,7 +325,8 @@ impl<R: Read> Parser<R> {
         &mut self,
         block_end: &str,
         no_end_token: bool,
-    ) -> Result<Vec<Statement>> {
+        early_stoppers: &[&str],
+    ) -> Result<(Vec<Statement>, String)> {
         let mut statements = Vec::new();
 
         let concat_end_token = if no_end_token {
@@ -255,7 +335,9 @@ impl<R: Read> Parser<R> {
             format!("End{block_end}")
         };
 
-        loop {
+        let mut block_stopper;
+
+        'main_loop: loop {
             self.skip_line_returns()?;
 
             let Some(token) = self.current_token()? else {
@@ -265,21 +347,31 @@ impl<R: Read> Parser<R> {
             };
 
             if no_end_token {
-                if token.content == block_end {
+                if token.is(TokenTypeId::Keyword, block_end) {
+                    block_stopper = block_end.to_string();
                     break;
                 }
-            } else if token.content == concat_end_token {
+            } else if token.is(TokenTypeId::Operator, &concat_end_token) {
+                block_stopper = concat_end_token.to_string();
                 break;
-            } else if token.content == "End" {
+            } else if token.is(TokenTypeId::Operator, "End") {
                 if let Some(token) = self.next_token()? {
                     self.expect_token_type(&token, TokenTypeId::Keyword)?;
 
                     self.expect_token_content(&token, block_end)?;
+                    block_stopper = block_end.to_string();
                     break;
                 } else {
                     return self
                         .unexpected_eof()
                         .with_context(|| "Parser::parse_statement_block");
+                }
+            } else {
+                for stopper in early_stoppers {
+                    if token.is(TokenTypeId::Operator, stopper) {
+                        block_stopper = stopper.to_string();
+                        break 'main_loop;
+                    }
                 }
             }
 
@@ -294,7 +386,7 @@ impl<R: Read> Parser<R> {
 
         self.consume_token();
 
-        Ok(statements)
+        Ok((statements, block_stopper))
     }
 
     fn parse_expr(&mut self) -> Result<Expr> {
@@ -312,7 +404,7 @@ impl<R: Read> Parser<R> {
                 break;
             };
 
-            if let TokenType::EndOfLine = token.token_type {
+            if token.is(TokenTypeId::EndOfLine, "\n") || token.is(TokenTypeId::Keyword, "Then") {
                 break;
             }
 
@@ -325,7 +417,7 @@ impl<R: Read> Parser<R> {
                 "/" => BinaryExprOp::Div,
                 "<" => BinaryExprOp::Less,
                 "<=" => BinaryExprOp::LessOrEqual,
-                "==" => BinaryExprOp::Equal,
+                "=" => BinaryExprOp::Equal,
                 ">=" => BinaryExprOp::GreaterOrEqual,
                 ">" => BinaryExprOp::Greater,
                 "<>" => BinaryExprOp::Different,
@@ -335,6 +427,8 @@ impl<R: Read> Parser<R> {
                 "," | ")" => break,
                 v => bail!("Unexpected operator: {v}"),
             };
+
+            self.consume_token();
 
             let mut right_expr = self.parse_expr_single_pass()?;
             right_expr = self.might_be_a_func_call(right_expr)?;
@@ -452,7 +546,10 @@ impl<R: Read> Parser<R> {
             self._current_token = self.read_token()?;
         }
 
-        Ok(self._current_token.clone())
+        Ok(self
+            ._current_token
+            .clone()
+            .inspect(|token| println!("TOKEN: {token:?}")))
     }
 
     pub fn peek_token(&mut self) -> Result<Option<Token>> {
@@ -468,7 +565,6 @@ impl<R: Read> Parser<R> {
     fn read_token(&mut self) -> Result<Option<Token>> {
         self.token_source
             .next_token()
-            .inspect(|token| println!("TOKEN: {token:?}"))
             .with_context(|| "Parser::read_token")
     }
 

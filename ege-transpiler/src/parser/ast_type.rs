@@ -5,7 +5,7 @@ pub struct Program {
     pub statements: Vec<Statement>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, IntoStaticStr)]
 pub enum Statement {
     FunctionDecl(FunctionDecl),
     FunctionCall(FunctionCall),
