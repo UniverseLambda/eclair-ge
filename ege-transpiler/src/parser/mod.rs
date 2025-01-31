@@ -225,11 +225,9 @@ impl<R: Read> Parser<R> {
             .collect();
 
         if has_else {
-            let last = otherwises.last_mut().unwrap();
-
-            *last = Otherwise::Else {
-                statements: last.statements().to_vec(),
-            };
+            otherwises.push(Otherwise::Else {
+                statements: else_statements,
+            });
         }
 
         Ok(If {
@@ -390,10 +388,10 @@ impl<R: Read> Parser<R> {
                     block_stopper = block_end.to_string();
                     break;
                 }
-            } else if token.is(TokenTypeId::Operator, &concat_end_token) {
+            } else if token.is(TokenTypeId::Keyword, &concat_end_token) {
                 block_stopper = concat_end_token.to_string();
                 break;
-            } else if token.is(TokenTypeId::Operator, "End") {
+            } else if token.is(TokenTypeId::Keyword, "End") {
                 if let Some(token) = self.next_token()? {
                     self.expect_token_type(&token, TokenTypeId::Keyword)?;
 
@@ -405,12 +403,12 @@ impl<R: Read> Parser<R> {
                         .unexpected_eof()
                         .with_context(|| "Parser::parse_statement_block");
                 }
-            } else {
-                for stopper in early_stoppers {
-                    if token.is(TokenTypeId::Operator, stopper) {
-                        block_stopper = stopper.to_string();
-                        break 'main_loop;
-                    }
+            }
+
+            for stopper in early_stoppers {
+                if token.is(TokenTypeId::Keyword, stopper) {
+                    block_stopper = stopper.to_string();
+                    break 'main_loop;
                 }
             }
 
@@ -450,7 +448,7 @@ impl<R: Read> Parser<R> {
                 break;
             }
 
-            self.expect_token_type(&token, TokenTypeId::Operator)?;
+            self.expect_any_token_type(&token, &[TokenTypeId::Operator, TokenTypeId::Keyword])?;
 
             let binary_op = match token.content.as_str() {
                 "+" => BinaryExprOp::Add,
@@ -467,7 +465,7 @@ impl<R: Read> Parser<R> {
                 "Or" => BinaryExprOp::BoolOr,
                 "^" => BinaryExprOp::Xor,
                 "," | ")" => break,
-                v => bail!("Unexpected operator: {v}"),
+                v => bail!("Unexpected {:?}: {v}", token.token_type.to_id()),
             };
 
             self.consume_token();
@@ -527,10 +525,12 @@ impl<R: Read> Parser<R> {
         // - a float: 3.14
         // - a string: "zarma"
         // - a variable: banger$
+        // - a parenthese
         // - a function call: pipoudou(...)
         // The trickiest of all is the function call,
         // because it's the only one we can't build from a single token
         // So we just ignore it because fuck it
+        // And for parentheses expr, we just consume it, and call parse_expr
 
         // FIXME: Handle expressions that might be starting with keywords like "Not"
 
@@ -551,6 +551,11 @@ impl<R: Read> Parser<R> {
             (TokenType::IntegerLiteral(v), _) => Expr::Integer(v),
             (TokenType::StringLiteral, v) => Expr::String(v),
             (TokenType::Ident(ident_type), name) => Expr::Variable(Ident { name, ident_type }),
+            (TokenType::Operator, v) if v == "(" => {
+                self.consume_token();
+
+                self.parse_expr()?
+            }
             (t, v) => bail!("Unexpected token: `{v}` (type: {t:?})"),
         })
     }

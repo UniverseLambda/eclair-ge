@@ -96,6 +96,8 @@ pub struct Tokenizer<R: Read> {
     chars: VecDeque<char>,
     current_line: usize,
     current_column: usize,
+    token_line: usize,
+    token_column: usize,
 }
 
 impl<R: Read> Tokenizer<R> {
@@ -104,7 +106,9 @@ impl<R: Read> Tokenizer<R> {
             source: BufReader::new(source),
             chars: VecDeque::new(),
             current_line: 0,
-            current_column: 0,
+            current_column: 1,
+            token_line: 0,
+            token_column: 1,
         }
     }
 
@@ -127,6 +131,9 @@ impl<R: Read> Tokenizer<R> {
         // SAFETY: we know it is Some as it is checked in the previous loop.
         let current_char = self.current_char()?.unwrap();
 
+        self.token_line = self.current_line;
+        self.token_column = self.current_column;
+
         if current_char.is_alphabetic() {
             self.handle_word()
         } else if current_char == '"' {
@@ -138,8 +145,8 @@ impl<R: Read> Tokenizer<R> {
             Ok(Token {
                 content: "\n".to_string(),
                 token_type: TokenType::EndOfLine,
-                column: self.current_column,
-                line: self.current_line,
+                column: self.token_column,
+                line: self.token_line,
             })
         } else {
             self.handle_operator()
@@ -191,8 +198,8 @@ impl<R: Read> Tokenizer<R> {
         Ok(Token {
             content: word_buffer,
             token_type,
-            column: self.current_column,
-            line: self.current_line,
+            column: self.token_column,
+            line: self.token_line,
         })
     }
 
@@ -222,8 +229,8 @@ impl<R: Read> Tokenizer<R> {
         Ok(Token {
             content: string_buffer,
             token_type: TokenType::StringLiteral,
-            column: self.current_column,
-            line: self.current_line,
+            column: self.token_column,
+            line: self.token_line,
         })
     }
 
@@ -265,8 +272,8 @@ impl<R: Read> Tokenizer<R> {
         Ok(Token {
             content: number_buffer,
             token_type,
-            column: self.current_column,
-            line: self.current_line,
+            column: self.token_column,
+            line: self.token_line,
         })
     }
 
@@ -297,8 +304,8 @@ impl<R: Read> Tokenizer<R> {
                     return Ok(Token {
                         content: OPERATORS[idx].to_string(),
                         token_type: TokenType::Operator,
-                        column: self.current_column,
-                        line: self.current_line,
+                        column: self.token_column,
+                        line: self.token_line,
                     });
                 }
             }
@@ -308,8 +315,8 @@ impl<R: Read> Tokenizer<R> {
             return Ok(Token {
                 content: operator_buffer,
                 token_type: TokenType::Operator,
-                column: self.current_column,
-                line: self.current_line,
+                column: self.token_column,
+                line: self.token_line,
             });
         }
 
@@ -339,7 +346,7 @@ impl<R: Read> Tokenizer<R> {
             self.chars = buf.chars().collect::<VecDeque<char>>();
 
             self.current_line += 1;
-            self.current_column = 0;
+            self.current_column = 1;
 
             Ok(self.chars.front().cloned())
         }

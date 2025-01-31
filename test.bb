@@ -1,4 +1,4 @@
-; Code taken from the Wikipedia page for BlitzBasic (but fix some issues)
+; Code taken from the Wikipedia page for BlitzBasic (with some fixes)
 
 ; Those two will be treated as `AppTile("Binary Clock")` and `Graphics(150,80,16,3)`
 AppTitle "Binary Clock"
@@ -31,8 +31,8 @@ Repeat
         binaryMask=2^bit
 
         ;do hours
-        If (bit<4)
-            If (hour And binaryMask)
+        If (bit<4) Then
+            If (hour And binaryMask) Then
                 Text xpos,5,"1"
             Else
                 Text xpos,5,"0"
@@ -40,14 +40,14 @@ Repeat
         EndIf
 
         ;do the minutes
-        If (minute And binaryMask)
+        If (minute And binaryMask) Then
             Text xpos,25,"1"
         Else
             Text xpos,25,"0"
         EndIf
 
         ;do the seconds
-        If (second And binaryMask)
+        If (second And binaryMask) Then
  			Text xpos,45,"1"
         Else
  			Text xpos,45,"0"
