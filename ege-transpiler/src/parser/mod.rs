@@ -2,8 +2,8 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    BinaryExpr, BinaryExprOp, Expr, FunctionCall, Ident, If, Otherwise, Program, RepeatLoop,
-    Statement, VarAssign, VarScope,
+    BinaryExpr, BinaryExprOp, Expr, ForLoop, FunctionCall, Ident, If, Otherwise, Program,
+    RepeatLoop, Statement, VarAssign, VarScope,
 };
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
@@ -64,10 +64,7 @@ impl<R: Read> Parser<R> {
                 self.parse_var_assign().map(Statement::VarAssign)?
             }
             (TokenType::Keyword, "If") => self.parse_if().map(Statement::If)?,
-            (TokenType::Keyword, "For") => {
-                /* TODO: For parsing */
-                todo!()
-            }
+            (TokenType::Keyword, "For") => self.parse_for().map(Statement::For)?,
             (TokenType::Keyword, "Repeat") => Statement::Repeat(self.parse_repeat()?),
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
             (TokenType::FunctionKeyword, _) => self
@@ -112,9 +109,51 @@ impl<R: Read> Parser<R> {
             _ => unreachable!(),
         };
 
+        self.consume_token();
+
         Ok(Ident {
             name: ident.content,
             ident_type,
+        })
+    }
+
+    fn parse_for(&mut self) -> Result<ForLoop> {
+        println!(
+            "parse_for: current_token: {:#?}, peeked: {:#?}",
+            self.current_token()?,
+            self.peek_token()?
+        );
+
+        let for_keyword = self.required_token()?;
+        self.expect_token(&for_keyword, TokenTypeId::Keyword, "For")?;
+        self.consume_token();
+
+        let it_ident = self.parse_ident()?;
+
+        let eq_operator = self.required_token()?;
+        self.expect_token(&eq_operator, TokenTypeId::Operator, "=")?;
+        self.consume_token();
+
+        // TODO: support for Each here
+
+        let initial_value = self.parse_expr()?;
+
+        let to_keyword = self.required_token()?;
+        self.expect_token(&to_keyword, TokenTypeId::Keyword, "To")?;
+        self.consume_token();
+
+        let final_value = self.parse_expr()?;
+
+        let lf = self.required_token()?;
+        self.expect_token_type(&lf, TokenTypeId::EndOfLine)?;
+
+        let (statements, _) = self.parse_statement_block("Next", true, &[])?;
+
+        Ok(ForLoop {
+            name: it_ident,
+            from: initial_value,
+            to: final_value,
+            statements,
         })
     }
 
@@ -209,7 +248,7 @@ impl<R: Read> Parser<R> {
 
         let ident = self.parse_ident()?;
 
-        let expr_start = self.required_next_token()?;
+        let expr_start = self.required_token()?;
 
         let ends_with_parenth = if expr_start.is(TokenTypeId::Operator, "(") {
             self.consume_token();
@@ -404,7 +443,10 @@ impl<R: Read> Parser<R> {
                 break;
             };
 
-            if token.is(TokenTypeId::EndOfLine, "\n") || token.is(TokenTypeId::Keyword, "Then") {
+            if token.is(TokenTypeId::EndOfLine, "\n")
+                || token.is(TokenTypeId::Keyword, "Then")
+                || token.is(TokenTypeId::Keyword, "To")
+            {
                 break;
             }
 
