@@ -5,12 +5,13 @@ use std::{
 
 use anyhow::{anyhow, bail, Result};
 
-const KEYWORDS: [&str; 33] = [
+const KEYWORDS: [&str; 28] = [
     "Global", "Local", "If", "Then", "ElseIf", "Else", "EndIf", "Include", "While", "Wend",
     "Select", "Case", "End", "Repeat", "Forever", "Until", "Dim", "For", "To", "Each", "Next",
     "Type", "Field", "Function", "Return", "And", "Or", "Not", // Syntaxical keywords
-    "Print", "AppTitle", "Graphics", "Cls", "Text", // Function-like keywords
 ];
+
+const FUNCTION_KEYWORDS: [&str; 5] = ["Print", "AppTitle", "Graphics", "Cls", "Text"];
 
 const OPERATORS: [&str; 16] = [
     "(", ")", "=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^", ",", ".", "\\",
@@ -32,6 +33,7 @@ pub enum IdentTyping {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TokenTypeId {
     Keyword,
+    FunctionKeyword,
     Ident,
     Operator,
     StringLiteral,
@@ -43,6 +45,7 @@ pub enum TokenTypeId {
 #[derive(Clone, Debug)]
 pub enum TokenType {
     Keyword,
+    FunctionKeyword,
     Ident(Option<IdentTyping>),
     Operator,
     StringLiteral,
@@ -56,6 +59,7 @@ impl TokenType {
     pub fn to_id(&self) -> TokenTypeId {
         match self {
             TokenType::Keyword => TokenTypeId::Keyword,
+            TokenType::FunctionKeyword => TokenTypeId::FunctionKeyword,
             TokenType::Ident(_) => TokenTypeId::Ident,
             TokenType::Operator => TokenTypeId::Operator,
             TokenType::StringLiteral => TokenTypeId::StringLiteral,
@@ -70,6 +74,12 @@ impl TokenType {
 pub struct Token {
     pub content: String,
     pub token_type: TokenType,
+}
+
+impl Token {
+    pub fn is(&self, tk_type: TokenTypeId, content: &str) -> bool {
+        tk_type == self.token_type.to_id() && content == self.content
+    }
 }
 
 pub struct Tokenizer<R: Read> {
@@ -150,6 +160,7 @@ impl<R: Read> Tokenizer<R> {
                 self.handle_word()?.content
             }))),
             _ if KEYWORDS.contains(&word_buffer.as_str()) => TokenType::Keyword,
+            _ if FUNCTION_KEYWORDS.contains(&word_buffer.as_str()) => TokenType::FunctionKeyword,
             _ => TokenType::Ident(None),
         };
 

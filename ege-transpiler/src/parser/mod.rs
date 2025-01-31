@@ -2,7 +2,8 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    BinaryExpr, BinaryExprOp, Expr, Ident, Program, RepeatLoop, Statement, VarAssign, VarScope,
+    BinaryExpr, BinaryExprOp, Expr, FunctionCall, Ident, Program, RepeatLoop, Statement, VarAssign,
+    VarScope,
 };
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
@@ -64,6 +65,7 @@ impl<R: Read> Parser<R> {
             }
             (TokenType::Keyword, "Repeat") => Statement::Repeat(self.parse_repeat()?),
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
+            (TokenType::FunctionKeyword, _) => self.parse_function()?,
             (t, v) => bail!("Unexpected token: `{v}` (type: {t:?})"),
         };
 
@@ -85,6 +87,22 @@ impl<R: Read> Parser<R> {
             }
             v => bail!("Unexpected token: `{v}` (type: {:?})", peeked.token_type),
         }
+    }
+
+    fn parse_function(&mut self) -> Result<FunctionCall> {
+        let ident = self.required_token()?;
+
+        let mut first_expr = self.required_next_token()?;
+
+        let ends_with_parenth = if first_expr.is(TokenTypeId::Operator, "(") {
+            first_expr = self.required_next_token()?;
+
+            true
+        } else {
+            false
+        };
+
+        todo!()
     }
 
     fn parse_var_assign(&mut self) -> Result<VarAssign> {
@@ -318,6 +336,12 @@ impl<R: Read> Parser<R> {
         } else {
             self.next_token().with_context(|| "Parser::current_token")
         }
+    }
+
+    pub fn required_next_token(&mut self) -> Result<Token> {
+        self.consume_token();
+
+        self.required_token()
     }
 
     pub fn required_token(&mut self) -> Result<Token> {
