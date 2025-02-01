@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Result};
+use serde::Serialize;
 
 const KEYWORDS: [&str; 28] = [
     "Global", "Local", "If", "Then", "ElseIf", "Else", "EndIf", "Include", "While", "Wend",
@@ -29,7 +30,7 @@ const IDENT_SUFFIXES: [char; 4] = [
     IDENT_TYPE_SUFFIX,
 ];
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub enum IdentTyping {
     String,
     Float,

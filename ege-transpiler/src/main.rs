@@ -2,7 +2,7 @@ mod lexer;
 mod parser;
 
 fn main() {
-    println!("Eclair Game Engine Compiler v0.1");
+    eprintln!("Eclair Game Engine Compiler v0.1");
 
     let file = std::fs::File::open("test.bb").unwrap();
 
@@ -11,5 +11,7 @@ fn main() {
 
     let program = parser.parse_program().unwrap();
 
-    println!("PROGRAM: {program:?}");
+    eprintln!("PROGRAM: {program:#?}");
+
+    println!("{}", serde_json::to_string_pretty(&program).unwrap())
 }

@@ -32,7 +32,7 @@ impl<R: Read> Parser<R> {
             .parse_statement()
             .with_context(|| "Parser::parse_program")?
         {
-            println!("Statement: {statement:?}");
+            eprintln!("Statement: {statement:?}");
             statements.push(statement);
         }
 
@@ -77,7 +77,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_statement_from_ident(&mut self) -> Result<Statement> {
-        println!(
+        eprintln!(
             "parse_statement_from_ident: current_token: {:?}, peeked: {:?}",
             self.current_token()?,
             self.peek_token()?
@@ -118,7 +118,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_for(&mut self) -> Result<ForLoop> {
-        println!(
+        eprintln!(
             "parse_for: current_token: {:#?}, peeked: {:#?}",
             self.current_token()?,
             self.peek_token()?
@@ -158,7 +158,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_if(&mut self) -> Result<If> {
-        println!(
+        eprintln!(
             "parse_if: current_token: {:?}, peeked: {:?}",
             self.current_token()?,
             self.peek_token()?
@@ -238,7 +238,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_function_call(&mut self) -> Result<FunctionCall> {
-        println!(
+        eprintln!(
             "parse_function_call: current_token: {:?}, peeked: {:?}",
             self.current_token()?,
             self.peek_token()?
@@ -289,7 +289,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_var_assign(&mut self) -> Result<VarAssign> {
-        println!(
+        eprintln!(
             "parse_expr: current_token: {:?}, peeked: {:?}",
             self.current_token()?,
             self.peek_token()?
@@ -427,7 +427,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_expr(&mut self) -> Result<Expr> {
-        println!(
+        eprintln!(
             "parse_expr: current_token: {:?}, peeked: {:?}",
             self.current_token()?,
             self.peek_token()?
@@ -484,7 +484,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn might_be_a_func_call(&mut self, current_expr: Expr) -> Result<Expr> {
-        println!(
+        eprintln!(
             "might_be_a_func_call: current_token: {:?}, peeked: {:?}",
             self.current_token()?,
             self.peek_token()?
@@ -515,7 +515,7 @@ impl<R: Read> Parser<R> {
 
     // This function doesn't consume its last token.
     fn parse_expr_single_pass(&mut self) -> Result<Expr> {
-        println!(
+        eprintln!(
             "parse_expr_single_pass: current_token: {:#?}",
             self.current_token()?,
         );
@@ -534,7 +534,7 @@ impl<R: Read> Parser<R> {
 
         // FIXME: Handle expressions that might be starting with keywords like "Not"
 
-        println!(
+        eprintln!(
             "POST parse_expr_single_pass: current_token: {:#?}",
             self.current_token()?,
         );
@@ -596,7 +596,7 @@ impl<R: Read> Parser<R> {
         Ok(self
             ._current_token
             .clone()
-            .inspect(|token| println!("TOKEN: {token:?}")))
+            .inspect(|token| eprintln!("TOKEN: {token:?}")))
     }
 
     pub fn peek_token(&mut self) -> Result<Option<Token>> {
