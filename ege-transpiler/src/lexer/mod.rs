@@ -241,7 +241,7 @@ impl<R: Read> Tokenizer<R> {
 
         let initial_number = self.current_char()?;
 
-        if !initial_number.map_or(false, |c| c.is_digit(10)) {
+        if !initial_number.is_some_and(|c| c.is_ascii_digit()) {
             bail!(
                 "handle_number called but current_char is not a digit (found {initial_number:?})"
             );
@@ -250,7 +250,7 @@ impl<R: Read> Tokenizer<R> {
         number_buffer.push(initial_number.unwrap());
 
         while let Some(zarma) = self.next_char()? {
-            if zarma.is_digit(10) {
+            if zarma.is_ascii_digit() {
                 number_buffer.push(zarma);
             } else if zarma == '.' {
                 if is_float {
@@ -312,7 +312,7 @@ impl<R: Read> Tokenizer<R> {
             }
         }
 
-        if let Some(_) = match_exact {
+        if match_exact.is_some() {
             return Ok(Token {
                 content: operator_buffer,
                 token_type: TokenType::Operator,
