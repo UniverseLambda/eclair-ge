@@ -1,3 +1,4 @@
+mod array_decl;
 mod expr;
 mod func;
 mod ident;
@@ -10,6 +11,7 @@ mod packed_type;
 mod select;
 mod var_assign;
 
+pub use array_decl::*;
 pub use expr::*;
 pub use func::*;
 pub use ident::*;
@@ -45,7 +47,7 @@ pub enum Statement {
     FunctionDecl(FunctionDecl),
     FunctionCall(FunctionCall),
     VarAssign(VarAssign),
-    ArrayDecl(ArrayDecl),
+    ArrayDecl(ArrayDecls),
     If(If),
     For(ForLoop),
     Repeat(RepeatLoop),
@@ -82,10 +84,4 @@ impl Statement {
             _ => false,
         }
     }
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct ArrayDecl {
-    pub ident: Ident,
-    pub size: Expr,
 }

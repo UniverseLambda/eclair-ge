@@ -37,6 +37,11 @@ For n.NPCs = Each NPCs
 	EndIf
 Next
 
+Dim PickSFX%(10)
+
+Dim OpenDoorSFX%(3,3), CloseDoorSFX%(3,3)
+
+
 Repeat
  	Hour = Left(CurrentTime$(),2)
  	Minute = Mid(CurrentTime$(),3,2)
