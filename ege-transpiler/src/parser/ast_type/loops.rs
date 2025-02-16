@@ -3,7 +3,10 @@ use std::io::Read;
 use anyhow::Context;
 use serde::Serialize;
 
-use crate::{lexer::TokenTypeId, parser::Parser};
+use crate::{
+    lexer::TokenTypeId,
+    parser::{expect_token, expect_token_type, Parser},
+};
 
 use super::{Expr, Ident, Parsable, Statement};
 
@@ -24,13 +27,13 @@ impl Parsable for ForLoop {
         );
 
         let for_keyword = parser.required_token()?;
-        parser.expect_token(&for_keyword, TokenTypeId::Keyword, "For")?;
+        expect_token(&for_keyword, TokenTypeId::Keyword, "For")?;
         parser.consume_token();
 
         let it_ident = Ident::parse(parser)?;
 
         let eq_operator = parser.required_token()?;
-        parser.expect_token(&eq_operator, TokenTypeId::Operator, "=")?;
+        expect_token(&eq_operator, TokenTypeId::Operator, "=")?;
         parser.consume_token();
 
         // TODO: support for Each here
@@ -38,13 +41,13 @@ impl Parsable for ForLoop {
         let initial_value = Expr::parse(parser)?;
 
         let to_keyword = parser.required_token()?;
-        parser.expect_token(&to_keyword, TokenTypeId::Keyword, "To")?;
+        expect_token(&to_keyword, TokenTypeId::Keyword, "To")?;
         parser.consume_token();
 
         let final_value = Expr::parse(parser)?;
 
         let lf = parser.required_token()?;
-        parser.expect_token_type(&lf, TokenTypeId::EndOfLine)?;
+        expect_token_type(&lf, TokenTypeId::EndOfLine)?;
 
         let (statements, _) = parser.parse_statement_block("Next", true, &[])?;
 
@@ -74,7 +77,7 @@ impl Parsable for RepeatLoop {
                 .with_context(|| "Parser::parse_repeat");
         };
 
-        parser.expect_token_type(&lf, TokenTypeId::EndOfLine)?;
+        expect_token_type(&lf, TokenTypeId::EndOfLine)?;
 
         let (statements, _) = parser
             .parse_statement_block("Forever", true, &[])

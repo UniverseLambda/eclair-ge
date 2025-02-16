@@ -2,7 +2,8 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    Expr, ForLoop, FunctionCall, If, Parsable, Program, RepeatLoop, Statement, VarAssign,
+    Expr, ForLoop, FunctionCall, FunctionDecl, If, PackedDecl, Parsable, Program, RepeatLoop,
+    Statement, VarAssign,
 };
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
@@ -45,7 +46,7 @@ impl<R: Read> Parser<R> {
             return Ok(None);
         };
 
-        self.expect_any_token_type(
+        expect_any_token_type(
             &disc,
             &[
                 TokenTypeId::Keyword,
@@ -56,8 +57,7 @@ impl<R: Read> Parser<R> {
 
         let statement = match (disc.token_type, disc.content.as_str()) {
             (TokenType::Keyword, "Function") => {
-                /* TODO: Function declaration parsing */
-                todo!()
+                FunctionDecl::parse(self).map(Statement::FunctionDecl)?
             }
             (TokenType::Keyword, "Local" | "Global") => {
                 VarAssign::parse(self).map(Statement::VarAssign)?
@@ -65,6 +65,7 @@ impl<R: Read> Parser<R> {
             (TokenType::Keyword, "If") => If::parse(self).map(Statement::If)?,
             (TokenType::Keyword, "For") => ForLoop::parse(self).map(Statement::For)?,
             (TokenType::Keyword, "Repeat") => RepeatLoop::parse(self).map(Statement::Repeat)?,
+            (TokenType::Keyword, "Type") => PackedDecl::parse(self).map(Statement::PackedDecl)?,
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
             (TokenType::FunctionKeyword, _) => {
                 FunctionCall::parse(self).map(Statement::FunctionCall)?
@@ -130,9 +131,9 @@ impl<R: Read> Parser<R> {
                 break;
             } else if token.is(TokenTypeId::Keyword, "End") {
                 if let Some(token) = self.next_token()? {
-                    self.expect_token_type(&token, TokenTypeId::Keyword)?;
+                    expect_token_type(&token, TokenTypeId::Keyword)?;
 
-                    self.expect_token_content(&token, block_end)?;
+                    expect_token_content(&token, block_end)?;
                     block_stopper = block_end.to_string();
                     break;
                 } else {
@@ -170,11 +171,15 @@ impl<R: Read> Parser<R> {
             self.peek_token()?
         );
 
-        if let Expr::Variable(ident) = current_expr {
+        if let Expr::Path(ident_path) = current_expr {
+            if ident_path.components.len() != 1 {
+                return Ok(Expr::Path(ident_path));
+            }
+
             let Some(peeked_token) = self.peek_token()? else {
                 self.consume_token();
 
-                return Ok(Expr::Variable(ident));
+                return Ok(Expr::Path(ident_path));
             };
 
             if peeked_token.token_type.to_id() == TokenTypeId::Operator
@@ -184,7 +189,7 @@ impl<R: Read> Parser<R> {
             } else {
                 self.consume_token();
 
-                Ok(Expr::Variable(ident))
+                Ok(Expr::Path(ident_path))
             }
         } else {
             self.consume_token();
@@ -248,38 +253,6 @@ impl<R: Read> Parser<R> {
             .with_context(|| "Parser::read_token")
     }
 
-    fn expect_token(&self, token: &Token, tktype: TokenTypeId, content: &str) -> Result<()> {
-        if token.token_type.to_id() == tktype && token.content == content {
-            Ok(())
-        } else {
-            bail!("Unexpected token: {token:?}, expected: {content:?} (type: {tktype:?})");
-        }
-    }
-
-    fn expect_token_type(&self, token: &Token, tktype: TokenTypeId) -> Result<()> {
-        self.expect_any_token_type(token, &[tktype])
-    }
-
-    fn expect_token_content(&self, token: &Token, content: &str) -> Result<()> {
-        if token.content == content {
-            Ok(())
-        } else {
-            bail!("Unexpected token: {token:?}, expected: {content:?}");
-        }
-    }
-
-    fn expect_any_token_type(&self, token: &Token, tktypes: &[TokenTypeId]) -> Result<()> {
-        let curr = token.token_type.to_id();
-
-        for tktype in tktypes {
-            if *tktype == curr {
-                return Ok(());
-            }
-        }
-
-        bail!("Unexpected token: {token:?}, expected: {tktypes:?}");
-    }
-
     fn skip_line_returns(&mut self) -> Result<()> {
         while let Some(token) = self.current_token()? {
             if token.token_type.to_id() != TokenTypeId::EndOfLine {
@@ -295,4 +268,36 @@ impl<R: Read> Parser<R> {
     fn unexpected_eof<T>(&self) -> Result<T> {
         bail!("Unexpected End-Of-File");
     }
+}
+
+fn expect_token(token: &Token, tktype: TokenTypeId, content: &str) -> Result<()> {
+    if token.token_type.to_id() == tktype && token.content == content {
+        Ok(())
+    } else {
+        bail!("Unexpected token: {token:?}, expected: {content:?} (type: {tktype:?})");
+    }
+}
+
+fn expect_token_type(token: &Token, tktype: TokenTypeId) -> Result<()> {
+    expect_any_token_type(token, &[tktype])
+}
+
+fn expect_token_content(token: &Token, content: &str) -> Result<()> {
+    if token.content == content {
+        Ok(())
+    } else {
+        bail!("Unexpected token: {token:?}, expected: {content:?}");
+    }
+}
+
+fn expect_any_token_type(token: &Token, tktypes: &[TokenTypeId]) -> Result<()> {
+    let curr = token.token_type.to_id();
+
+    for tktype in tktypes {
+        if *tktype == curr {
+            return Ok(());
+        }
+    }
+
+    bail!("Unexpected token: {token:?}, expected: {tktypes:?}");
 }

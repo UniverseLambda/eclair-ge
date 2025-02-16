@@ -1,7 +1,10 @@
 use anyhow::bail;
 use serde::Serialize;
 
-use crate::lexer::{TokenType, TokenTypeId};
+use crate::{
+    lexer::{TokenType, TokenTypeId},
+    parser::expect_token,
+};
 
 use super::{Expr, Ident, Parsable};
 
@@ -41,23 +44,15 @@ impl Parsable for VarAssign {
             None
         };
 
-        let ident_token = parser.required_token()?;
-        parser.expect_token_type(&ident_token, TokenTypeId::Ident)?;
-
-        let TokenType::Ident(ident_typing) = ident_token.token_type else {
-            unreachable!()
-        };
+        let ident = Ident::parse(parser)?;
 
         let mut res = VarAssign {
-            name: Ident {
-                name: ident_token.content,
-                ident_type: ident_typing,
-            },
+            name: ident,
             scope,
             value: None,
         };
 
-        let Some(operator) = parser.next_token()? else {
+        let Some(operator) = parser.current_token()? else {
             return Ok(res);
         };
 
@@ -65,7 +60,7 @@ impl Parsable for VarAssign {
             return Ok(res);
         }
 
-        parser.expect_token(&operator, TokenTypeId::Operator, "=")?;
+        expect_token(&operator, TokenTypeId::Operator, "=")?;
         parser.consume_token();
 
         res.value = Some(Expr::parse(parser)?);

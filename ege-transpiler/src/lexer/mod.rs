@@ -14,20 +14,22 @@ const KEYWORDS: [&str; 28] = [
 
 const FUNCTION_KEYWORDS: [&str; 5] = ["Print", "AppTitle", "Graphics", "Cls", "Text"];
 
-const OPERATORS: [&str; 16] = [
-    "(", ")", "=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^", ",", ".", "\\",
+const OPERATORS: [&str; 15] = [
+    "(", ")", "=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^", ",", ".",
 ];
 
 const IDENT_STRING_SUFFIX: char = '$';
 const IDENT_FLOAT_SUFFIX: char = '#';
 const IDENT_INT_SUFFIX: char = '%';
 const IDENT_TYPE_SUFFIX: char = '.';
+const IDENT_PATH_SUFFIX: char = '\\';
 
-const IDENT_SUFFIXES: [char; 4] = [
+const IDENT_SUFFIXES: [char; 5] = [
     IDENT_STRING_SUFFIX,
     IDENT_FLOAT_SUFFIX,
     IDENT_INT_SUFFIX,
     IDENT_TYPE_SUFFIX,
+    IDENT_PATH_SUFFIX,
 ];
 
 #[derive(Clone, Debug, Serialize)]
@@ -43,6 +45,7 @@ pub enum TokenTypeId {
     Keyword,
     FunctionKeyword,
     Ident,
+    Path,
     Operator,
     StringLiteral,
     IntegerLiteral,
@@ -55,6 +58,7 @@ pub enum TokenType {
     Keyword,
     FunctionKeyword,
     Ident(Option<IdentTyping>),
+    Path(Vec<String>, Option<IdentTyping>),
     Operator,
     StringLiteral,
     IntegerLiteral(i64),
@@ -69,6 +73,7 @@ impl TokenType {
             TokenType::Keyword => TokenTypeId::Keyword,
             TokenType::FunctionKeyword => TokenTypeId::FunctionKeyword,
             TokenType::Ident(_) => TokenTypeId::Ident,
+            TokenType::Path(_, _) => TokenTypeId::Path,
             TokenType::Operator => TokenTypeId::Operator,
             TokenType::StringLiteral => TokenTypeId::StringLiteral,
             TokenType::IntegerLiteral(_) => TokenTypeId::IntegerLiteral,
@@ -182,6 +187,36 @@ impl<R: Read> Tokenizer<R> {
 
                 self.handle_word()?.content
             }))),
+            Some(IDENT_PATH_SUFFIX) => {
+                let mut path_components = vec![word_buffer.clone()];
+                let last_ident_type;
+
+                {
+                    self.next_char()?;
+
+                    // FIXME: Generate error when the Ident has a typing
+
+                    let next = self.handle_word()?;
+
+                    match next.token_type {
+                        // TODO: Handle Keyword and FunctionKeyword
+                        // TokenType::Keyword => todo!(),
+                        // TokenType::FunctionKeyword => todo!(),
+                        TokenType::Ident(ident_type) => {
+                            path_components.push(next.content);
+
+                            last_ident_type = ident_type;
+                        }
+                        TokenType::Path(components, ident_type) => {
+                            path_components.extend(components);
+                            last_ident_type = ident_type;
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+
+                TokenType::Path(path_components, last_ident_type)
+            }
             _ if KEYWORDS.contains(&word_buffer.as_str()) => TokenType::Keyword,
             _ if FUNCTION_KEYWORDS.contains(&word_buffer.as_str()) => TokenType::FunctionKeyword,
             _ => TokenType::Ident(None),

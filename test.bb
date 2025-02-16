@@ -8,6 +8,17 @@ Graphics 150,80,16,3
 ;executed twice a second
 secondtimer=CreateTimer(2)
 
+Type ConsoleMsg
+	Field txt$
+	Field isCommand%
+	Field r%,g%,b%
+End Type
+
+Function PrintMsg(txt$,totallyUseless%=6)
+	Print "BANGER"+txt$
+End Function
+
+
 Repeat
  	Hour = Left(CurrentTime$(),2)
  	Minute = Mid(CurrentTime$(),3,2)

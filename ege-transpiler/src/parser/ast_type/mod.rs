@@ -1,6 +1,7 @@
 mod expr;
 mod func;
 mod ident;
+mod ident_path;
 mod if_statement;
 mod loops;
 mod packed_type;
@@ -9,6 +10,7 @@ mod var_assign;
 pub use expr::*;
 pub use func::*;
 pub use ident::*;
+pub use ident_path::*;
 pub use if_statement::*;
 pub use loops::*;
 pub use packed_type::*;
@@ -39,6 +41,7 @@ pub enum Statement {
     If(If),
     For(ForLoop),
     Repeat(RepeatLoop),
+    PackedDecl(PackedDecl),
 }
 
 #[derive(Debug, Clone, Serialize)]

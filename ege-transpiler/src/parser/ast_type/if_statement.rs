@@ -2,7 +2,10 @@ use std::io::Read;
 
 use serde::Serialize;
 
-use crate::{lexer::TokenTypeId, parser::Parser};
+use crate::{
+    lexer::TokenTypeId,
+    parser::{expect_token, Parser},
+};
 
 use super::{Expr, Parsable, Statement};
 
@@ -33,7 +36,7 @@ impl Parsable for If {
         );
 
         let if_operator = parser.required_token()?;
-        parser.expect_token(&if_operator, TokenTypeId::Keyword, "If")?;
+        expect_token(&if_operator, TokenTypeId::Keyword, "If")?;
         parser.consume_token();
 
         let mut has_else = false;
@@ -47,7 +50,7 @@ impl Parsable for If {
                 cond = Expr::parse(parser)?;
 
                 let then_keyword = parser.required_token()?;
-                parser.expect_token(&then_keyword, TokenTypeId::Keyword, "Then")?;
+                expect_token(&then_keyword, TokenTypeId::Keyword, "Then")?;
             } else {
                 cond = Expr::Integer(1)
             }

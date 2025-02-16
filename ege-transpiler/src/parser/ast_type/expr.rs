@@ -5,10 +5,10 @@ use serde::Serialize;
 
 use crate::{
     lexer::{TokenType, TokenTypeId},
-    parser::Parser,
+    parser::{expect_any_token_type, Parser},
 };
 
-use super::{FunctionCall, Ident, Parsable};
+use super::{FunctionCall, IdentPath, Parsable};
 
 #[derive(Debug, Clone, Serialize)]
 pub enum Expr {
@@ -16,9 +16,8 @@ pub enum Expr {
     String(String),
     Integer(i64),
     Float(f64),
-    Variable(Ident),
     Binary(BinaryExpr),
-    Path(Vec<Ident>),
+    Path(IdentPath),
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -71,7 +70,7 @@ impl Parsable for Expr {
                 break;
             }
 
-            parser.expect_any_token_type(&token, &[TokenTypeId::Operator, TokenTypeId::Keyword])?;
+            expect_any_token_type(&token, &[TokenTypeId::Operator, TokenTypeId::Keyword])?;
 
             let binary_op = match token.content.as_str() {
                 "+" => BinaryExprOp::Add,
@@ -145,7 +144,13 @@ impl Expr {
             (TokenType::FloatLiteral(v), _) => Expr::Float(v),
             (TokenType::IntegerLiteral(v), _) => Expr::Integer(v),
             (TokenType::StringLiteral, v) => Expr::String(v),
-            (TokenType::Ident(ident_type), name) => Expr::Variable(Ident { name, ident_type }),
+            (TokenType::Path(components, final_type), _) => Expr::Path(IdentPath {
+                components,
+                final_type,
+            }),
+            (TokenType::Ident(ident_type), name) => {
+                Expr::Path(IdentPath::from_single_name_and_type(name, ident_type))
+            }
             (TokenType::Operator, v) if v == "(" => {
                 parser.consume_token();
 

@@ -5,7 +5,7 @@ use serde::Serialize;
 
 use crate::{
     lexer::{IdentTyping, TokenType, TokenTypeId},
-    parser::Parser,
+    parser::{expect_any_token_type, Parser},
 };
 
 use super::Parsable;
@@ -20,8 +20,7 @@ impl Parsable for Ident {
     fn parse(parser: &mut Parser<impl Read>) -> Result<Self> {
         let ident = parser.required_token()?;
 
-        parser
-            .expect_any_token_type(&ident, &[TokenTypeId::Ident, TokenTypeId::FunctionKeyword])?;
+        expect_any_token_type(&ident, &[TokenTypeId::Ident, TokenTypeId::FunctionKeyword])?;
 
         let ident_type = match ident.token_type {
             TokenType::Ident(ident_type) => ident_type,
