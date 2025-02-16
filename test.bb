@@ -8,6 +8,8 @@ Graphics 150,80,16,3
 ;executed twice a second
 secondtimer=CreateTimer(2)
 
+Global ConsoleR% = 255,ConsoleG% = 255,ConsoleB% = 255
+
 Type ConsoleMsg
 	Field txt$
 	Field isCommand%

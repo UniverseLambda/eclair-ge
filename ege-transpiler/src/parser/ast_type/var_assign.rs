@@ -17,9 +17,8 @@ pub enum VarScope {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct VarAssign {
-    pub name: Ident,
     pub scope: Option<VarScope>,
-    pub value: Option<Expr>,
+    pub defs: Vec<(Ident, Option<Expr>)>,
 }
 
 impl Parsable for VarAssign {
@@ -44,27 +43,43 @@ impl Parsable for VarAssign {
             None
         };
 
-        let ident = Ident::parse(parser)?;
+        let mut defs = Vec::new();
 
-        let mut res = VarAssign {
-            name: ident,
-            scope,
-            value: None,
-        };
+        loop {
+            let ident = Ident::parse(parser)?;
+            let Some(operator) = parser.current_token()? else {
+                defs.push((ident, None));
+                break;
+            };
 
-        let Some(operator) = parser.current_token()? else {
-            return Ok(res);
-        };
+            if let TokenType::EndOfLine = operator.token_type {
+                defs.push((ident, None));
+                break;
+            }
 
-        if let TokenType::EndOfLine = operator.token_type {
-            return Ok(res);
+            if operator.is(TokenTypeId::Operator, ",") {
+                defs.push((ident, None));
+                continue;
+            }
+
+            expect_token(&operator, TokenTypeId::Operator, "=")?;
+            parser.consume_token();
+
+            let value = Expr::parse(parser)?;
+
+            defs.push((ident, Some(value)));
+
+            let next_token = parser.current_token()?;
+
+            if let Some(token) = next_token {
+                if token.is(TokenTypeId::Operator, ",") {
+                    parser.consume_token();
+                    continue;
+                }
+            }
+            break;
         }
 
-        expect_token(&operator, TokenTypeId::Operator, "=")?;
-        parser.consume_token();
-
-        res.value = Some(Expr::parse(parser)?);
-
-        Ok(res)
+        Ok(VarAssign { scope, defs })
     }
 }
