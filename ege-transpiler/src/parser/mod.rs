@@ -2,10 +2,8 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    ArrayDecls, Expr, Expr, ForLoop, ForLoop, FunctionCall, FunctionCall, FunctionDecl,
-    FunctionDecl, If, If, Include, Insert, NoDataStatement, PackedDecl, PackedDecl, Parsable,
-    Parsable, Program, Program, RepeatLoop, RepeatLoop, Select, Statement, Statement, VarAssign,
-    VarAssign,
+    ArrayDecls, Expr, ForLoop, FunctionCall, FunctionDecl, If, Include, Insert, NoDataStatement,
+    PackedDecl, Parsable, Program, RepeatLoop, Select, Statement, VarAssign,
 };
 use ext::TokenExt;
 use log::{debug, trace, warn};

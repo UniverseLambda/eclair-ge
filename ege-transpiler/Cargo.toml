@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-# default = ["llvm18"]
-default = ["llvm12"]
+default = ["llvm18"]
+# default = ["llvm12"]
 llvm18 = ["inkwell/llvm18-0"]
 llvm12 = ["inkwell/llvm12-0"]
 
