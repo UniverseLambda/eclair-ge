@@ -485,7 +485,7 @@
                                 "final_type": null
                               }
                             },
-                            "op": "Xor"
+                            "op": "Pow"
                           }
                         }
                       ]
@@ -531,7 +531,7 @@
                                   "final_type": null
                                 }
                               },
-                              "op": "BoolAnd"
+                              "op": "BitAnd"
                             }
                           },
                           "statements": [
@@ -618,7 +618,7 @@
                             "final_type": null
                           }
                         },
-                        "op": "BoolAnd"
+                        "op": "BitAnd"
                       }
                     },
                     "statements": [
@@ -701,7 +701,7 @@
                             "final_type": null
                           }
                         },
-                        "op": "BoolAnd"
+                        "op": "BitAnd"
                       }
                     },
                     "statements": [

@@ -22,6 +22,20 @@ pub enum Expr {
     CollectionFirst(Ident),
     CollectionLast(Ident),
     New(Ident),
+    Unary(UnaryExpr),
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub enum UnaryExprOp {
+    Posate, // (?) // Lmao
+    Negate,
+    BitComplement
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UnaryExpr {
+    pub op: UnaryExprOp,
+    pub value: Box<Expr>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -36,9 +50,10 @@ pub enum BinaryExprOp {
     GreaterOrEqual,
     Greater,
     Different,
-    BoolAnd,
-    BoolOr,
-    Xor,
+    BitAnd,
+    BitOr,
+    BitXor,
+    Pow,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -55,6 +70,22 @@ impl Parsable for Expr {
             parser.current_token()?,
             parser.peek_token()?
         );
+
+        let current_token = parser.required_token()?;
+
+        if current_token.is(TokenTypeId::Operator, "-") {
+            parser.consume_token();
+
+            return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::Negate, value: Box::new(Self::parse(parser)?) }))
+        } else if current_token.is(TokenTypeId::Operator, "+") {
+            parser.consume_token();
+
+            return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::Posate, value: Box::new(Self::parse(parser)?) }))
+        } else if current_token.is(TokenTypeId::Operator, "~") {
+            parser.consume_token();
+
+            return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::BitComplement, value: Box::new(Self::parse(parser)?) }))
+        }
 
         let mut current_expr: Expr = Self::parse_single_pass(parser)?;
         current_expr = parser.might_be_a_func_call(current_expr)?;
@@ -87,9 +118,10 @@ impl Parsable for Expr {
                 ">=" => BinaryExprOp::GreaterOrEqual,
                 ">" => BinaryExprOp::Greater,
                 "<>" => BinaryExprOp::Different,
-                "And" => BinaryExprOp::BoolAnd,
-                "Or" => BinaryExprOp::BoolOr,
-                "^" => BinaryExprOp::Xor,
+                "And" => BinaryExprOp::BitAnd,
+                "Or" => BinaryExprOp::BitOr,
+                "Xor" => BinaryExprOp::BitXor,
+                "^" => BinaryExprOp::Pow,
                 "," | ")" => break,
                 v => bail!("Unexpected {:?}: {v}", token.token_type.to_id()),
             };
