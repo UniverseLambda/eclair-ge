@@ -6,9 +6,9 @@ use std::{
 use anyhow::{anyhow, bail, Result};
 use serde::Serialize;
 
-const KEYWORDS: [&str; 35] = [
+const KEYWORDS: [&str; 36] = [
     "Global", "Local", "If", "Then", "ElseIf", "Else", "EndIf", "Include", "While", "Wend",
-    "Select", "Case", "End", "Repeat", "Forever", "Until", "Dim", "For", "To", "Each", "Next", "Exit",
+    "Select", "Case", "Default", "End", "Repeat", "Forever", "Until", "Dim", "For", "To", "Each", "Next", "Exit",
     "New", "Insert", "Before", "After", "First", "Last",
     "Type", "Field", "Function", "Return", "And", "Or", "Not", // Syntaxical keywords
 ];
@@ -110,6 +110,18 @@ pub struct Tokenizer<R: Read> {
 }
 
 impl<R: Read> Tokenizer<R> {
+    pub fn line(&self) -> usize {
+        self.current_line
+    }
+
+    pub fn column(&self) -> usize {
+        self.current_column
+    }
+
+    pub fn source_path(&self) -> String {
+        self.source_path.clone()
+    }
+
     pub fn new(source_path: String, source: R) -> Self {
         Self {
             source_path,

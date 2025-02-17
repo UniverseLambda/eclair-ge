@@ -85,9 +85,9 @@ impl Parsable for If {
                 blocks.push((cond, if_statement_block));
             }
 
-            if stopper == "Else" {
+            if stopper.content == "Else" {
                 has_else = true;
-            } else if stopper != "ElseIf" {
+            } else if stopper.content != "ElseIf" {
                 break;
             }
         }

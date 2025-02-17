@@ -79,6 +79,2229 @@
                   }
                 ]
               }
+            },
+            {
+              "Select": {
+                "value": {
+                  "Function": {
+                    "ident": {
+                      "name": "Lower",
+                      "ident_type": null
+                    },
+                    "params": [
+                      {
+                        "Path": {
+                          "components": [
+                            "StrTemp"
+                          ],
+                          "final_type": null
+                        }
+                      }
+                    ]
+                  }
+                },
+                "cases": [
+                  {
+                    "values": [
+                      {
+                        "String": "1"
+                      },
+                      {
+                        "String": ""
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "LIST OF COMMANDS - PAGE 1/3"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- asd"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- status"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- camerapick"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- ending"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- noclipspeed"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- noclip"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- injure [value]"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- infect [value]"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- heal"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- teleport [room name]"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- spawnitem [item name]"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- wireframe"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- 173speed"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- 106speed"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- 173state"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- 106state"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "Binary": {
+                                "left": {
+                                  "Binary": {
+                                    "left": {
+                                      "Binary": {
+                                        "left": {
+                                          "Binary": {
+                                            "left": {
+                                              "String": "Use "
+                                            },
+                                            "right": {
+                                              "Function": {
+                                                "ident": {
+                                                  "name": "Chr",
+                                                  "ident_type": null
+                                                },
+                                                "params": [
+                                                  {
+                                                    "Integer": 34
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            "op": "Add"
+                                          }
+                                        },
+                                        "right": {
+                                          "String": "help 2/3"
+                                        },
+                                        "op": "Add"
+                                      }
+                                    },
+                                    "right": {
+                                      "Function": {
+                                        "ident": {
+                                          "name": "Chr",
+                                          "ident_type": null
+                                        },
+                                        "params": [
+                                          {
+                                            "Integer": 34
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "op": "Add"
+                                  }
+                                },
+                                "right": {
+                                  "String": " to find more commands."
+                                },
+                                "op": "Add"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "Binary": {
+                                "left": {
+                                  "Binary": {
+                                    "left": {
+                                      "Binary": {
+                                        "left": {
+                                          "Binary": {
+                                            "left": {
+                                              "String": "Use "
+                                            },
+                                            "right": {
+                                              "Function": {
+                                                "ident": {
+                                                  "name": "Chr",
+                                                  "ident_type": null
+                                                },
+                                                "params": [
+                                                  {
+                                                    "Integer": 34
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            "op": "Add"
+                                          }
+                                        },
+                                        "right": {
+                                          "String": "help [command name]"
+                                        },
+                                        "op": "Add"
+                                      }
+                                    },
+                                    "right": {
+                                      "Function": {
+                                        "ident": {
+                                          "name": "Chr",
+                                          "ident_type": null
+                                        },
+                                        "params": [
+                                          {
+                                            "Integer": 34
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "op": "Add"
+                                  }
+                                },
+                                "right": {
+                                  "String": " to get more information about a command."
+                                },
+                                "op": "Add"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "2"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "LIST OF COMMANDS - PAGE 2/3"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- spawn [npc type] [state]"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- reset096"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- disable173"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- enable173"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- disable106"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- enable106"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- halloween"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- sanic"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- scp-420-j"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- godmode"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- revive"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- noclip"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- showfps"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- 096state"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- debughud"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- camerafog [near] [far]"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- gamma [value]"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- infinitestamina"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "Binary": {
+                                "left": {
+                                  "Binary": {
+                                    "left": {
+                                      "Binary": {
+                                        "left": {
+                                          "Binary": {
+                                            "left": {
+                                              "String": "Use "
+                                            },
+                                            "right": {
+                                              "Function": {
+                                                "ident": {
+                                                  "name": "Chr",
+                                                  "ident_type": null
+                                                },
+                                                "params": [
+                                                  {
+                                                    "Integer": 34
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            "op": "Add"
+                                          }
+                                        },
+                                        "right": {
+                                          "String": "help [command name]"
+                                        },
+                                        "op": "Add"
+                                      }
+                                    },
+                                    "right": {
+                                      "Function": {
+                                        "ident": {
+                                          "name": "Chr",
+                                          "ident_type": null
+                                        },
+                                        "params": [
+                                          {
+                                            "Integer": 34
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "op": "Add"
+                                  }
+                                },
+                                "right": {
+                                  "String": " to get more information about a command."
+                                },
+                                "op": "Add"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "3"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- playmusic [clip + .wav/.ogg]"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- notarget"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "- unlockexits"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "asd"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - asd"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Actives godmode, noclip, wireframe and"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "sets fog distance to 20 near, 30 far"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "camerafog"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - camerafog"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Sets the draw distance of the fog."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "The fog begins generating at 'CameraFogNear' units"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "away from the camera and becomes completely opaque"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "at 'CameraFogFar' units away from the camera."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Example: camerafog 20 40"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "gamma"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - gamma"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Sets the gamma correction."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Should be set to a value between 0.0 and 2.0."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Default is 1.0."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "noclip"
+                      },
+                      {
+                        "String": "fly"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - noclip"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Toggles noclip, unless a valid parameter"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "is specified (on/off)."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Allows the camera to move in any direction while"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "bypassing collision."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "godmode"
+                      },
+                      {
+                        "String": "god"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - godmode"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Toggles godmode, unless a valid parameter"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "is specified (on/off)."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Prevents player death under normal circumstances."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "wireframe"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - wireframe"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Toggles wireframe, unless a valid parameter"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "is specified (on/off)."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Allows only the edges of geometry to be rendered,"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "making everything else transparent."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "spawnitem"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - spawnitem"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Spawns an item at the player's location."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Any name that can appear in your inventory"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "is a valid parameter."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Example: spawnitem Key Card Omni"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "spawn"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - spawn"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Spawns an NPC at the player's location."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Valid parameters are:"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "008zombie / 049 / 049-2 / 066 / 096 / 106 / 173"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "/ 178-1 / 372 / 513-1 / 966 / 1499-1 / class-d"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "/ guard / mtf / apache / tentacle"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "revive"
+                      },
+                      {
+                        "String": "undead"
+                      },
+                      {
+                        "String": "resurrect"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - revive"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Resets the player's death timer after the dying"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "animation triggers."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Does not affect injury, blood loss"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "or 008 infection values."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "teleport"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - teleport"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Teleports the player to the first instance"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "of the specified room. Any room that appears"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "in rooms.ini is a valid parameter."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "stopsound"
+                      },
+                      {
+                        "String": "stfu"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - stopsound"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Stops all currently playing sounds."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "camerapick"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - camerapick"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Prints the texture name and coordinates of"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "the model the camera is pointing at."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "status"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - status"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Prints player, camera, and room information."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "weed"
+                      },
+                      {
+                        "String": "scp-420-j"
+                      },
+                      {
+                        "String": "420"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - 420"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Generates dank memes."
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "values": [
+                      {
+                        "String": "playmusic"
+                      }
+                    ],
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "HELP - playmusic"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "Will play tracks in .ogg/.wav format"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "Binary": {
+                                "left": {
+                                  "Binary": {
+                                    "left": {
+                                      "Binary": {
+                                        "left": {
+                                          "Binary": {
+                                            "left": {
+                                              "String": "from "
+                                            },
+                                            "right": {
+                                              "Function": {
+                                                "ident": {
+                                                  "name": "Chr",
+                                                  "ident_type": null
+                                                },
+                                                "params": [
+                                                  {
+                                                    "Integer": 34
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            "op": "Add"
+                                          }
+                                        },
+                                        "right": {
+                                          "String": "SFX\\Music\\Custom\\"
+                                        },
+                                        "op": "Add"
+                                      }
+                                    },
+                                    "right": {
+                                      "Function": {
+                                        "ident": {
+                                          "name": "Chr",
+                                          "ident_type": null
+                                        },
+                                        "params": [
+                                          {
+                                            "Integer": 34
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "op": "Add"
+                                  }
+                                },
+                                "right": {
+                                  "String": "."
+                                },
+                                "op": "Add"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "CreateConsoleMsg",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "String": "******************************"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "default_case": [
+                  {
+                    "FunctionCall": {
+                      "ident": {
+                        "name": "CreateConsoleMsg",
+                        "ident_type": null
+                      },
+                      "params": [
+                        {
+                          "String": "There is no help available for that command."
+                        },
+                        {
+                          "Integer": 255
+                        },
+                        {
+                          "Integer": 150
+                        },
+                        {
+                          "Integer": 0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
             }
           ]
         }

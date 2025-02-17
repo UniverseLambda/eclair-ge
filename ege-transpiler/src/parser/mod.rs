@@ -2,8 +2,9 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    Expr, ForLoop, FunctionCall, FunctionDecl, If, Include, Insert, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Statement, VarAssign
+    Expr, ForLoop, FunctionCall, FunctionDecl, If, Include, Insert, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Select, Statement, VarAssign
 };
+use ext::TokenExt;
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
 
@@ -72,6 +73,7 @@ impl<R: Read> Parser<R> {
             (TokenType::Keyword, "Exit") => NoDataStatement::parse(self).map(Statement::NoData)?,
             (TokenType::Keyword, "Insert") => Insert::parse(self).map(Statement::Insert)?,
             (TokenType::Keyword, "Include") => Include::parse(self).map(Statement::Include)?,
+            (TokenType::Keyword, "Select") => Select::parse(self).map(Statement::Select)?,
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
             (TokenType::Path(_, _), _) => VarAssign::parse(self).map(Statement::VarAssign)?,
             (TokenType::FunctionKeyword, _) => {
@@ -114,10 +116,10 @@ impl<R: Read> Parser<R> {
                 .with_context(|| "Parser::parse_statement_from_ident");
         };
 
-        match peeked.content.as_str() {
+        match peeked.expect_any_content(&["=", "("])?.content.as_str() {
             "=" => VarAssign::parse(self).map(Statement::VarAssign),
             "(" => FunctionCall::parse(self).map(Statement::FunctionCall),
-            v => bail!("Unexpected token: `{v}` (type: {:?})", peeked.token_type),
+            _ => unreachable!()
         }
     }
 
@@ -126,7 +128,7 @@ impl<R: Read> Parser<R> {
         block_end: &str,
         no_end_token: bool,
         early_stoppers: &[&str],
-    ) -> Result<(Vec<Statement>, String)> {
+    ) -> Result<(Vec<Statement>, Token)> {
         let mut statements = Vec::new();
 
         let concat_end_token = if no_end_token {
@@ -148,18 +150,18 @@ impl<R: Read> Parser<R> {
 
             if no_end_token {
                 if token.is(TokenTypeId::Keyword, block_end) {
-                    block_stopper = block_end.to_string();
+                    block_stopper = token.clone();
                     break;
                 }
             } else if token.is(TokenTypeId::Keyword, &concat_end_token) {
-                block_stopper = concat_end_token.to_string();
+                block_stopper = token.clone();
                 break;
             } else if token.is(TokenTypeId::Keyword, "End") {
                 if let Some(token) = self.next_token()? {
                     expect_token_type(&token, TokenTypeId::Keyword)?;
 
                     expect_token_content(&token, block_end)?;
-                    block_stopper = block_end.to_string();
+                    block_stopper = token.clone();
                     break;
                 } else {
                     return self
@@ -170,7 +172,7 @@ impl<R: Read> Parser<R> {
 
             for stopper in early_stoppers {
                 if token.is(TokenTypeId::Keyword, stopper) {
-                    block_stopper = stopper.to_string();
+                    block_stopper = token.clone();
                     break 'main_loop;
                 }
             }
@@ -296,7 +298,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn unexpected_eof<T>(&self) -> Result<T> {
-        bail!("Unexpected End-Of-File");
+        bail!("{}:{}:{}: unexpected End-Of-File", self.token_source.source_path(), self.token_source.line(), self.token_source.column());
     }
 }
 

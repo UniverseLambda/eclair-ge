@@ -1,4 +1,4 @@
-; Code taken from the Wikipedia page for BlitzBasic (with some fixes)
+; Code taken from the Wikipedia page for BlitzBasic (with some fixes) mixed with some things from SCP: Containment Breach (as this is my main motivation for this)
 
 ; Those two will be treated as `AppTile("Binary Clock")` and `Graphics(150,80,16,3)`
 AppTitle "Binary Clock"

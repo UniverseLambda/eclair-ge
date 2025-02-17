@@ -3,10 +3,11 @@ mod func;
 mod ident;
 mod ident_path;
 mod if_statement;
-mod insert;
 mod include;
+mod insert;
 mod loops;
 mod packed_type;
+mod select;
 mod var_assign;
 
 pub use expr::*;
@@ -18,6 +19,7 @@ pub use include::*;
 pub use insert::*;
 pub use loops::*;
 pub use packed_type::*;
+pub use select::*;
 pub use var_assign::*;
 
 use anyhow::Result;
@@ -51,6 +53,7 @@ pub enum Statement {
     Insert(Insert),
     NoData(NoDataStatement),
     Include(Include),
+    Select(Select),
 }
 
 #[derive(Debug, Clone, Serialize)]
