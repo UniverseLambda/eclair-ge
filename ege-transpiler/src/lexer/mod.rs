@@ -24,13 +24,13 @@ const IDENT_INT_SUFFIX: char = '%';
 const IDENT_TYPE_SUFFIX: char = '.';
 const IDENT_PATH_SUFFIX: char = '\\';
 
-const IDENT_SUFFIXES: [char; 5] = [
-    IDENT_STRING_SUFFIX,
-    IDENT_FLOAT_SUFFIX,
-    IDENT_INT_SUFFIX,
-    IDENT_TYPE_SUFFIX,
-    IDENT_PATH_SUFFIX,
-];
+// const IDENT_SUFFIXES: [char; 5] = [
+//     IDENT_STRING_SUFFIX,
+//     IDENT_FLOAT_SUFFIX,
+//     IDENT_INT_SUFFIX,
+//     IDENT_TYPE_SUFFIX,
+//     IDENT_PATH_SUFFIX,
+// ];
 
 #[derive(Clone, Debug, Serialize)]
 pub enum IdentTyping {
@@ -87,6 +87,7 @@ impl TokenType {
 pub struct Token {
     pub content: String,
     pub token_type: TokenType,
+    pub source_path: String,
     pub line: usize,
     pub column: usize,
 }
@@ -98,6 +99,7 @@ impl Token {
 }
 
 pub struct Tokenizer<R: Read> {
+    source_path: String,
     source: BufReader<R>,
     chars: VecDeque<char>,
     current_line: usize,
@@ -107,8 +109,9 @@ pub struct Tokenizer<R: Read> {
 }
 
 impl<R: Read> Tokenizer<R> {
-    pub fn new(source: R) -> Self {
+    pub fn new(source_path: String, source: R) -> Self {
         Self {
+            source_path,
             source: BufReader::new(source),
             chars: VecDeque::new(),
             current_line: 0,
@@ -150,6 +153,7 @@ impl<R: Read> Tokenizer<R> {
             self.next_char()?;
             Ok(Token {
                 content: "\n".to_string(),
+                source_path: self.source_path.clone(),
                 token_type: TokenType::EndOfLine,
                 column: self.token_column,
                 line: self.token_line,
@@ -234,6 +238,7 @@ impl<R: Read> Tokenizer<R> {
         Ok(Token {
             content: word_buffer,
             token_type,
+            source_path: self.source_path.clone(),
             column: self.token_column,
             line: self.token_line,
         })
@@ -265,6 +270,7 @@ impl<R: Read> Tokenizer<R> {
         Ok(Token {
             content: string_buffer,
             token_type: TokenType::StringLiteral,
+            source_path: self.source_path.clone(),
             column: self.token_column,
             line: self.token_line,
         })
@@ -308,6 +314,7 @@ impl<R: Read> Tokenizer<R> {
         Ok(Token {
             content: number_buffer,
             token_type,
+            source_path: self.source_path.clone(),
             column: self.token_column,
             line: self.token_line,
         })
@@ -340,6 +347,7 @@ impl<R: Read> Tokenizer<R> {
                     return Ok(Token {
                         content: OPERATORS[idx].to_string(),
                         token_type: TokenType::Operator,
+                        source_path: self.source_path.clone(),
                         column: self.token_column,
                         line: self.token_line,
                     });
@@ -351,6 +359,7 @@ impl<R: Read> Tokenizer<R> {
             return Ok(Token {
                 content: operator_buffer,
                 token_type: TokenType::Operator,
+                source_path: self.source_path.clone(),
                 column: self.token_column,
                 line: self.token_line,
             });

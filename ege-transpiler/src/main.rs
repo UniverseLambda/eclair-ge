@@ -6,7 +6,7 @@ fn main() {
 
     let file = std::fs::File::open("test_parser.bb").unwrap();
 
-    let lexer = lexer::Tokenizer::new(file);
+    let lexer = lexer::Tokenizer::new("test_parser.bb".to_string(), file);
     let mut parser = parser::Parser::new(lexer);
 
     let program = parser.parse_program().unwrap();

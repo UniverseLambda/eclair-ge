@@ -74,11 +74,11 @@ impl<R: Read> Parser<R> {
             (TokenType::FunctionKeyword, _) => {
                 FunctionCall::parse(self).map(Statement::FunctionCall)?
             }
-            (t, v) => bail!(".:{}:{}: : unexpected token: `{v}` (type: {t:?})", disc.line, disc.column),
+            (t, v) => bail!("{}:{}:{}: : unexpected token: `{v}` (type: {t:?})", disc.source_path, disc.line, disc.column),
         };
 
         if self.expect_inlinable && !statement.is_inlinable() {
-            bail!(".:{}:{}: statement {statement:?} is not inlinable.", disc.line, disc.column);
+            bail!("{}:{}:{}: statement {statement:?} is not inlinable.", disc.source_path, disc.line, disc.column);
         }
 
         self.expect_inlinable = false;
@@ -90,7 +90,7 @@ impl<R: Read> Parser<R> {
                 self.expect_inlinable = true;
 
                 if !statement.is_inlinable() {
-                    bail!(".:{}:{}: statement {statement:?} is not inlinable.", disc.line, disc.column);
+                    bail!("{}:{}:{}: statement {statement:?} is not inlinable.", disc.source_path, disc.line, disc.column);
                 }
             }
         }
@@ -283,7 +283,7 @@ impl<R: Read> Parser<R> {
             }
 
             if self.expect_inlinable {
-                bail!(".:{}:{}: expected inlinable statement, but got line return.", token.line, token.column);
+                bail!("{}:{}:{}: expected inlinable statement, but got line return.", token.source_path, token.line, token.column);
             }
 
             self.next_token()?;
@@ -301,7 +301,7 @@ fn expect_token(token: &Token, tktype: TokenTypeId, content: &str) -> Result<()>
     if token.token_type.to_id() == tktype && token.content == content {
         Ok(())
     } else {
-        bail!("Unexpected token: {token:?}, expected: {content:?} (type: {tktype:?})");
+        bail!("{}:{}:{}: unexpected token: {token:?}, expected: {content:?} (type: {tktype:?})", token.source_path, token.line, token.column);
     }
 }
 
@@ -313,7 +313,7 @@ fn expect_token_content(token: &Token, content: &str) -> Result<()> {
     if token.content == content {
         Ok(())
     } else {
-        bail!("Unexpected token: {token:?}, expected: {content:?}");
+        bail!("{}:{}:{}: unexpected token: {token:?}, expected: {content:?}", token.source_path, token.line, token.column);
     }
 }
 
@@ -326,5 +326,5 @@ fn expect_any_token_type(token: &Token, tktypes: &[TokenTypeId]) -> Result<()> {
         }
     }
 
-    bail!("Unexpected token: {token:?}, expected: {tktypes:?}");
+    bail!("{}:{}:{}: unexpected token: {token:?}, expected: {tktypes:?}", token.source_path, token.line, token.column);
 }
