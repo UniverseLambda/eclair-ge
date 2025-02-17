@@ -2,7 +2,7 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    Expr, ForLoop, FunctionCall, FunctionDecl, If, Insert, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Statement, VarAssign
+    Expr, ForLoop, FunctionCall, FunctionDecl, If, Include, Insert, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Statement, VarAssign
 };
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
@@ -71,6 +71,7 @@ impl<R: Read> Parser<R> {
             (TokenType::Keyword, "Type") => PackedDecl::parse(self).map(Statement::PackedDecl)?,
             (TokenType::Keyword, "Exit") => NoDataStatement::parse(self).map(Statement::NoData)?,
             (TokenType::Keyword, "Insert") => Insert::parse(self).map(Statement::Insert)?,
+            (TokenType::Keyword, "Include") => Include::parse(self).map(Statement::Include)?,
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
             (TokenType::Path(_, _), _) => VarAssign::parse(self).map(Statement::VarAssign)?,
             (TokenType::FunctionKeyword, _) => {

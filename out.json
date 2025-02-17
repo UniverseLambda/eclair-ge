@@ -64,6 +64,27 @@
       }
     },
     {
+      "Include": {
+        "program": {
+          "statements": [
+            {
+              "FunctionCall": {
+                "ident": {
+                  "name": "Print",
+                  "ident_type": null
+                },
+                "params": [
+                  {
+                    "String": "ZARMA"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
       "VarAssign": {
         "scope": "Global",
         "defs": [
@@ -201,7 +222,7 @@
               }
             },
             {
-              "CollectionLast": {
+              "New": {
                 "name": "ConsoleMsg",
                 "ident_type": null
               }

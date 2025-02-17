@@ -4,6 +4,7 @@ mod ident;
 mod ident_path;
 mod if_statement;
 mod insert;
+mod include;
 mod loops;
 mod packed_type;
 mod var_assign;
@@ -13,6 +14,7 @@ pub use func::*;
 pub use ident::*;
 pub use ident_path::*;
 pub use if_statement::*;
+pub use include::*;
 pub use insert::*;
 pub use loops::*;
 pub use packed_type::*;
@@ -48,6 +50,7 @@ pub enum Statement {
     PackedDecl(PackedDecl),
     Insert(Insert),
     NoData(NoDataStatement),
+    Include(Include),
 }
 
 #[derive(Debug, Clone, Serialize)]

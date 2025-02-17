@@ -8,6 +8,8 @@ Graphics 150,80,16,3
 ;executed twice a second
 secondtimer=CreateTimer(2)
 
+Include "test_included.bb"
+
 Global ConsoleR% = 255,ConsoleG% = 255,ConsoleB% = 255
 
 Type ConsoleMsg
@@ -26,17 +28,10 @@ Insert c Before First ConsoleMsg
 For n.NPCs = Each NPCs
 	If n\NPCtype = NPCtype096 Then
 		n\State = 0
-		; Original line:
-		; StopStream_Strict(n\SoundChn) : n\SoundChn=0
-
-		StopStream_Strict(n\SoundChn)
-		n\SoundChn=0
+		StopStream_Strict(n\SoundChn) : n\SoundChn=0
 
 		If n\SoundChn2<>0
-			; Original line:
-			; StopStream_Strict(n\SoundChn2) : n\SoundChn2=0
-			StopStream_Strict(n\SoundChn2)
-			n\SoundChn2=0
+			StopStream_Strict(n\SoundChn2) : n\SoundChn2=0
 		EndIf
 		Exit
 	EndIf
