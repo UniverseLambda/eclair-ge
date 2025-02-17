@@ -13,7 +13,12 @@ const KEYWORDS: [&str; 36] = [
     "Type", "Field", "Function", "Return", "And", "Or", "Not", // Syntaxical keywords
 ];
 
-const FUNCTION_KEYWORDS: [&str; 5] = ["Print", "AppTitle", "Graphics", "Cls", "Text"];
+const FUNCTION_KEYWORDS: [&str; 11] = [
+    "Print", "AppTitle", "Graphics", "Cls", "Text",
+    "PlaySound",
+    "FreeEntity", "PositionEntity", "ResetEntity", "ShowEntity",
+    "AASetFont",
+    ];
 
 const OPERATORS: [&str; 16] = [
     "(", ")", "=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^", ",", ".", ":",
