@@ -2,8 +2,7 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    Expr, ForLoop, FunctionCall, FunctionDecl, If, PackedDecl, Parsable, Program, RepeatLoop,
-    Statement, VarAssign,
+    Expr, ForLoop, FunctionCall, FunctionDecl, If, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Statement, VarAssign
 };
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
@@ -14,6 +13,7 @@ pub struct Parser<R: Read> {
     token_source: Tokenizer<R>,
     _current_token: Option<Token>,
     _peeked_token: Option<Token>,
+    expect_inlinable: bool,
 }
 
 impl<R: Read> Parser<R> {
@@ -22,6 +22,7 @@ impl<R: Read> Parser<R> {
             token_source,
             _current_token: None,
             _peeked_token: None,
+            expect_inlinable: false,
         }
     }
 
@@ -67,13 +68,32 @@ impl<R: Read> Parser<R> {
             (TokenType::Keyword, "For") => ForLoop::parse(self).map(Statement::For)?,
             (TokenType::Keyword, "Repeat") => RepeatLoop::parse(self).map(Statement::Repeat)?,
             (TokenType::Keyword, "Type") => PackedDecl::parse(self).map(Statement::PackedDecl)?,
+            (TokenType::Keyword, "Exit") => NoDataStatement::parse(self).map(Statement::NoData)?,
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
             (TokenType::Path(_, _), _) => VarAssign::parse(self).map(Statement::VarAssign)?,
             (TokenType::FunctionKeyword, _) => {
                 FunctionCall::parse(self).map(Statement::FunctionCall)?
             }
-            (t, v) => bail!("Unexpected token: `{v}` (type: {t:?})"),
+            (t, v) => bail!(".:{}:{}: : unexpected token: `{v}` (type: {t:?})", disc.line, disc.column),
         };
+
+        if self.expect_inlinable && !statement.is_inlinable() {
+            bail!(".:{}:{}: statement {statement:?} is not inlinable.", disc.line, disc.column);
+        }
+
+        self.expect_inlinable = false;
+
+        if let Some(token) = self.current_token()? {
+            if token.is(TokenTypeId::Operator, ":") {
+                self.consume_token();
+
+                self.expect_inlinable = true;
+
+                if !statement.is_inlinable() {
+                    bail!(".:{}:{}: statement {statement:?} is not inlinable.", disc.line, disc.column);
+                }
+            }
+        }
 
         Ok(Some(statement))
     }
@@ -260,6 +280,10 @@ impl<R: Read> Parser<R> {
         while let Some(token) = self.current_token()? {
             if token.token_type.to_id() != TokenTypeId::EndOfLine {
                 break;
+            }
+
+            if self.expect_inlinable {
+                bail!(".:{}:{}: expected inlinable statement, but got line return.", token.line, token.column);
             }
 
             self.next_token()?;

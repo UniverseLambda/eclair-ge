@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::{
     lexer::TokenTypeId,
-    parser::{expect_token, Parser},
+    parser::{expect_token, expect_token_type, Parser},
 };
 
 use super::{Expr, Parsable, Statement};
@@ -50,12 +50,16 @@ impl Parsable for If {
                 cond = Expr::parse(parser)?;
 
                 let then_keyword = parser.required_token()?;
-                expect_token(&then_keyword, TokenTypeId::Keyword, "Then")?;
+
+                if then_keyword.is(TokenTypeId::Keyword, "Then") {
+                    parser.consume_token();
+                }
             } else {
-                cond = Expr::Integer(1)
+                cond = Expr::Integer(1);
+                parser.consume_token();
             }
 
-            let next_token = parser.required_next_token()?;
+            let next_token = parser.required_token()?;
             if !next_token.is(TokenTypeId::EndOfLine, "\n") {
                 // UNWRAP: We know we have something else. So it will either be an error, or a statement, but not nothing.
                 let statement = parser.parse_statement()?.unwrap();

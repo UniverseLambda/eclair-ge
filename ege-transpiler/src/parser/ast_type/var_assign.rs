@@ -6,7 +6,7 @@ use crate::{
     parser::expect_token,
 };
 
-use super::{Expr, Ident, IdentPath, Parsable};
+use super::{Expr, IdentPath, Parsable};
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub enum VarScope {

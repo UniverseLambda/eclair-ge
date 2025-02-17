@@ -21,7 +21,9 @@ use std::io::Read;
 
 use serde::Serialize;
 
-use super::Parser;
+use crate::lexer::TokenTypeId;
+
+use super::{expect_token_content, expect_token_type, Parser};
 
 pub trait Parsable: Sized {
     fn parse(parser: &mut Parser<impl Read>) -> Result<Self>;
@@ -42,6 +44,36 @@ pub enum Statement {
     For(ForLoop),
     Repeat(RepeatLoop),
     PackedDecl(PackedDecl),
+    NoData(NoDataStatement),
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub enum NoDataStatement {
+    Exit
+}
+
+impl Parsable for NoDataStatement {
+    fn parse(parser: &mut Parser<impl Read>) -> Result<Self> {
+        let zarma = parser.required_token()?;
+        expect_token_type(&zarma, TokenTypeId::Keyword)?;
+        parser.consume_token();
+
+        Ok(match zarma.content.as_str() {
+            "Exit" => Self::Exit,
+            v => return Err(expect_token_content(&zarma, "Exit").unwrap_err())
+        })
+    }
+}
+
+
+impl Statement {
+    pub fn is_inlinable(&self) -> bool {
+        match self {
+            Statement::FunctionCall(_) => true,
+            Statement::VarAssign(var_assign) => var_assign.scope.is_none(),
+            _ => false
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
