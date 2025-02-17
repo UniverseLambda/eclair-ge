@@ -2,12 +2,13 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    Expr, ForLoop, FunctionCall, FunctionDecl, If, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Statement, VarAssign
+    Expr, ForLoop, FunctionCall, FunctionDecl, If, Insert, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Statement, VarAssign
 };
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
 
 mod ast_type;
+mod ext;
 
 pub struct Parser<R: Read> {
     token_source: Tokenizer<R>,
@@ -69,12 +70,13 @@ impl<R: Read> Parser<R> {
             (TokenType::Keyword, "Repeat") => RepeatLoop::parse(self).map(Statement::Repeat)?,
             (TokenType::Keyword, "Type") => PackedDecl::parse(self).map(Statement::PackedDecl)?,
             (TokenType::Keyword, "Exit") => NoDataStatement::parse(self).map(Statement::NoData)?,
+            (TokenType::Keyword, "Insert") => Insert::parse(self).map(Statement::Insert)?,
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
             (TokenType::Path(_, _), _) => VarAssign::parse(self).map(Statement::VarAssign)?,
             (TokenType::FunctionKeyword, _) => {
                 FunctionCall::parse(self).map(Statement::FunctionCall)?
             }
-            (t, v) => bail!("{}:{}:{}: : unexpected token: `{v}` (type: {t:?})", disc.source_path, disc.line, disc.column),
+            (t, v) => bail!("{}:{}:{}: unexpected token: `{v}` (type: {t:?})", disc.source_path, disc.line, disc.column),
         };
 
         if self.expect_inlinable && !statement.is_inlinable() {

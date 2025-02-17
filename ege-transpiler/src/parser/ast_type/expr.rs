@@ -8,7 +8,7 @@ use crate::{
     parser::{expect_any_token_type, Parser},
 };
 
-use super::{FunctionCall, IdentPath, Parsable};
+use super::{FunctionCall, Ident, IdentPath, Parsable};
 
 #[derive(Debug, Clone, Serialize)]
 pub enum Expr {
@@ -18,6 +18,9 @@ pub enum Expr {
     Float(f64),
     Binary(BinaryExpr),
     Path(IdentPath),
+    CollectionFirst(Ident),
+    CollectionLast(Ident),
+    New(Ident),
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -120,6 +123,7 @@ impl Expr {
         // - a string: "zarma"
         // - a variable: banger$
         // - a parenthese
+        // - a New/First/Last followed by a type (ident)
         // - a function call: pipoudou(...)
         // The trickiest of all is the function call,
         // because it's the only one we can't build from a single token
@@ -148,12 +152,39 @@ impl Expr {
             (TokenType::Ident(ident_type), name) => {
                 Expr::Path(IdentPath::from_single_name_and_type(name, ident_type))
             }
+            (TokenType::Keyword, v) if v == "First" => {
+                let type_token = parser.required_next_token()?;
+
+                let ident = Ident::from_token(type_token)?;
+
+                // TODO: Generate an error when a type is specified
+
+                Expr::CollectionFirst(ident)
+            }
+            (TokenType::Keyword, v) if v == "Last" => {
+                let type_token = parser.required_next_token()?;
+
+                let ident = Ident::from_token(type_token)?;
+
+                // TODO: Generate an error when a type is specified
+
+                Expr::CollectionLast(ident)
+            }
+            (TokenType::Keyword, v) if v == "New" => {
+                let type_token = parser.required_next_token()?;
+
+                let ident = Ident::from_token(type_token)?;
+
+                // TODO: Generate an error when a type is specified
+
+                Expr::CollectionLast(ident)
+            }
             (TokenType::Operator, v) if v == "(" => {
                 parser.consume_token();
 
                 Expr::parse(parser)?
             }
-            (t, v) => bail!("Unexpected token: `{v}` (type: {t:?})"),
+            (t, v) => bail!("{}:{}:{}; Unexpected token: `{v}` (type: {t:?})", current_token.source_path, current_token.line, current_token.column),
         })
     }
 }

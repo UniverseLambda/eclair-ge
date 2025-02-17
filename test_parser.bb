@@ -20,6 +20,9 @@ Function PrintMsg(txt$,totallyUseless%=6)
 	Print "BANGER"+txt$
 End Function
 
+Local c.ConsoleMsg = New ConsoleMsg
+Insert c Before First ConsoleMsg
+
 For n.NPCs = Each NPCs
 	If n\NPCtype = NPCtype096 Then
 		n\State = 0

@@ -4,8 +4,8 @@ use anyhow::Result;
 use serde::Serialize;
 
 use crate::{
-    lexer::{IdentTyping, TokenType, TokenTypeId},
-    parser::{expect_any_token_type, Parser},
+    lexer::{IdentTyping, Token, TokenType, TokenTypeId},
+    parser::{expect_any_token_type, expect_token_type, Parser},
 };
 
 use super::Parsable;
@@ -14,6 +14,18 @@ use super::Parsable;
 pub struct Ident {
     pub name: String,
     pub ident_type: Option<IdentTyping>,
+}
+
+impl Ident {
+    pub fn from_token(token: Token) -> Result<Self> {
+
+        expect_token_type(&token, TokenTypeId::Ident)?;
+
+        let v = token.content;
+        let TokenType::Ident(ident_type) = token.token_type else { unreachable!() };
+
+        Ok(Ident { name: v, ident_type })
+    }
 }
 
 impl Parsable for Ident {

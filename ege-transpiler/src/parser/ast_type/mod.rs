@@ -3,6 +3,7 @@ mod func;
 mod ident;
 mod ident_path;
 mod if_statement;
+mod insert;
 mod loops;
 mod packed_type;
 mod var_assign;
@@ -12,6 +13,7 @@ pub use func::*;
 pub use ident::*;
 pub use ident_path::*;
 pub use if_statement::*;
+pub use insert::*;
 pub use loops::*;
 pub use packed_type::*;
 pub use var_assign::*;
@@ -44,12 +46,13 @@ pub enum Statement {
     For(ForLoop),
     Repeat(RepeatLoop),
     PackedDecl(PackedDecl),
+    Insert(Insert),
     NoData(NoDataStatement),
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub enum NoDataStatement {
-    Exit
+    Exit,
 }
 
 impl Parsable for NoDataStatement {
@@ -60,18 +63,17 @@ impl Parsable for NoDataStatement {
 
         Ok(match zarma.content.as_str() {
             "Exit" => Self::Exit,
-            v => return Err(expect_token_content(&zarma, "Exit").unwrap_err())
+            _ => return Err(expect_token_content(&zarma, "Exit").unwrap_err()),
         })
     }
 }
-
 
 impl Statement {
     pub fn is_inlinable(&self) -> bool {
         match self {
             Statement::FunctionCall(_) => true,
             Statement::VarAssign(var_assign) => var_assign.scope.is_none(),
-            _ => false
+            _ => false,
         }
     }
 }

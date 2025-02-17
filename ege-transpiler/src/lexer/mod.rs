@@ -6,9 +6,10 @@ use std::{
 use anyhow::{anyhow, bail, Result};
 use serde::Serialize;
 
-const KEYWORDS: [&str; 29] = [
+const KEYWORDS: [&str; 35] = [
     "Global", "Local", "If", "Then", "ElseIf", "Else", "EndIf", "Include", "While", "Wend",
     "Select", "Case", "End", "Repeat", "Forever", "Until", "Dim", "For", "To", "Each", "Next", "Exit",
+    "New", "Insert", "Before", "After", "First", "Last",
     "Type", "Field", "Function", "Return", "And", "Or", "Not", // Syntaxical keywords
 ];
 

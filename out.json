@@ -188,6 +188,43 @@
       }
     },
     {
+      "VarAssign": {
+        "scope": "Local",
+        "defs": [
+          [
+            {
+              "components": [
+                "c"
+              ],
+              "final_type": {
+                "Type": "ConsoleMsg"
+              }
+            },
+            {
+              "CollectionLast": {
+                "name": "ConsoleMsg",
+                "ident_type": null
+              }
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "Insert": {
+        "source": {
+          "name": "c",
+          "ident_type": null
+        },
+        "rel_pos": "Before",
+        "pivot": "First",
+        "collection": {
+          "name": "ConsoleMsg",
+          "ident_type": null
+        }
+      }
+    },
+    {
       "For": {
         "name": {
           "name": "n",
