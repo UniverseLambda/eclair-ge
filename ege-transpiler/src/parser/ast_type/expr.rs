@@ -177,7 +177,7 @@ impl Expr {
 
                 // TODO: Generate an error when a type is specified
 
-                Expr::CollectionLast(ident)
+                Expr::New(ident)
             }
             (TokenType::Operator, v) if v == "(" => {
                 parser.consume_token();
