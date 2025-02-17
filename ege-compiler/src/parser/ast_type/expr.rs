@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use anyhow::{bail, Context};
+use inkwell::values::BasicValueEnum;
 use log::{debug, trace};
 use serde::Serialize;
 
@@ -29,7 +30,7 @@ pub enum Expr {
 pub enum UnaryExprOp {
     Posate, // (?) // Lmao
     Negate,
-    BitComplement
+    BitComplement,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -77,17 +78,26 @@ impl Parsable for Expr {
             trace!("branching for unary expr '-'");
             parser.consume_token();
 
-            return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::Negate, value: Box::new(Self::parse(parser)?) }))
+            return Ok(Self::Unary(UnaryExpr {
+                op: UnaryExprOp::Negate,
+                value: Box::new(Self::parse(parser)?),
+            }));
         } else if current_token.is(TokenTypeId::Operator, "+") {
             trace!("branching for unary expr '+'");
             parser.consume_token();
 
-            return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::Posate, value: Box::new(Self::parse(parser)?) }))
+            return Ok(Self::Unary(UnaryExpr {
+                op: UnaryExprOp::Posate,
+                value: Box::new(Self::parse(parser)?),
+            }));
         } else if current_token.is(TokenTypeId::Operator, "~") {
             trace!("branching for unary expr '~'");
             parser.consume_token();
 
-            return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::BitComplement, value: Box::new(Self::parse(parser)?) }))
+            return Ok(Self::Unary(UnaryExpr {
+                op: UnaryExprOp::BitComplement,
+                value: Box::new(Self::parse(parser)?),
+            }));
         }
 
         let mut current_expr: Expr = Self::parse_single_pass(parser)?;
@@ -146,6 +156,21 @@ impl Parsable for Expr {
 }
 
 impl Expr {
+    fn codegen(&self) -> anyhow::Result<BasicValueEnum> {
+        match self {
+            Expr::Function(function_call) => todo!(),
+            Expr::String(_) => todo!(),
+            Expr::Integer(_) => todo!(),
+            Expr::Float(_) => todo!(),
+            Expr::Binary(binary_expr) => todo!(),
+            Expr::Path(ident_path) => todo!(),
+            Expr::CollectionFirst(ident) => todo!(),
+            Expr::CollectionLast(ident) => todo!(),
+            Expr::New(ident) => todo!(),
+            Expr::Unary(unary_expr) => todo!(),
+        }
+    }
+
     // This function doesn't consume its last token.
     fn parse_single_pass(parser: &mut Parser<impl Read>) -> anyhow::Result<Self> {
         debug!(
@@ -220,7 +245,12 @@ impl Expr {
 
                 Expr::parse(parser)?
             }
-            (t, v) => bail!("{}:{}:{}; Unexpected token: `{v}` (type: {t:?})", current_token.source_path, current_token.line, current_token.column),
+            (t, v) => bail!(
+                "{}:{}:{}; Unexpected token: `{v}` (type: {t:?})",
+                current_token.source_path,
+                current_token.line,
+                current_token.column
+            ),
         })
     }
 }
