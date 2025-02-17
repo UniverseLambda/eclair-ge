@@ -74,14 +74,17 @@ impl Parsable for Expr {
         let current_token = parser.required_token()?;
 
         if current_token.is(TokenTypeId::Operator, "-") {
+            trace!("branching for unary expr '-'");
             parser.consume_token();
 
             return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::Negate, value: Box::new(Self::parse(parser)?) }))
         } else if current_token.is(TokenTypeId::Operator, "+") {
+            trace!("branching for unary expr '+'");
             parser.consume_token();
 
             return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::Posate, value: Box::new(Self::parse(parser)?) }))
         } else if current_token.is(TokenTypeId::Operator, "~") {
+            trace!("branching for unary expr '~'");
             parser.consume_token();
 
             return Ok(Self::Unary(UnaryExpr { op: UnaryExprOp::BitComplement, value: Box::new(Self::parse(parser)?) }))
