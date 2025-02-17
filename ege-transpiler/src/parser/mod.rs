@@ -35,7 +35,6 @@ impl<R: Read> Parser<R> {
             .parse_statement()
             .with_context(|| "Parser::parse_program")?
         {
-            eprintln!("Statement: {statement:?}");
             statements.push(statement);
         }
 

@@ -1,0 +1,863 @@
+{
+  "statements": [
+    {
+      "FunctionCall": {
+        "ident": {
+          "name": "AppTitle",
+          "ident_type": null
+        },
+        "params": [
+          {
+            "String": "Binary Clock"
+          }
+        ]
+      }
+    },
+    {
+      "FunctionCall": {
+        "ident": {
+          "name": "Graphics",
+          "ident_type": null
+        },
+        "params": [
+          {
+            "Integer": 150
+          },
+          {
+            "Integer": 80
+          },
+          {
+            "Integer": 16
+          },
+          {
+            "Integer": 3
+          }
+        ]
+      }
+    },
+    {
+      "VarAssign": {
+        "scope": null,
+        "defs": [
+          [
+            {
+              "components": [
+                "secondtimer"
+              ],
+              "final_type": null
+            },
+            {
+              "Function": {
+                "ident": {
+                  "name": "CreateTimer",
+                  "ident_type": null
+                },
+                "params": [
+                  {
+                    "Integer": 2
+                  }
+                ]
+              }
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "Repeat": {
+        "statements": [
+          {
+            "VarAssign": {
+              "scope": null,
+              "defs": [
+                [
+                  {
+                    "components": [
+                      "Hour"
+                    ],
+                    "final_type": null
+                  },
+                  {
+                    "Function": {
+                      "ident": {
+                        "name": "Left",
+                        "ident_type": null
+                      },
+                      "params": [
+                        {
+                          "Function": {
+                            "ident": {
+                              "name": "CurrentTime",
+                              "ident_type": "String"
+                            },
+                            "params": []
+                          }
+                        },
+                        {
+                          "Integer": 2
+                        }
+                      ]
+                    }
+                  }
+                ]
+              ]
+            }
+          },
+          {
+            "VarAssign": {
+              "scope": null,
+              "defs": [
+                [
+                  {
+                    "components": [
+                      "Minute"
+                    ],
+                    "final_type": null
+                  },
+                  {
+                    "Function": {
+                      "ident": {
+                        "name": "Mid",
+                        "ident_type": null
+                      },
+                      "params": [
+                        {
+                          "Function": {
+                            "ident": {
+                              "name": "CurrentTime",
+                              "ident_type": "String"
+                            },
+                            "params": []
+                          }
+                        },
+                        {
+                          "Integer": 3
+                        },
+                        {
+                          "Integer": 2
+                        }
+                      ]
+                    }
+                  }
+                ]
+              ]
+            }
+          },
+          {
+            "VarAssign": {
+              "scope": null,
+              "defs": [
+                [
+                  {
+                    "components": [
+                      "Second"
+                    ],
+                    "final_type": null
+                  },
+                  {
+                    "Function": {
+                      "ident": {
+                        "name": "Right",
+                        "ident_type": null
+                      },
+                      "params": [
+                        {
+                          "Function": {
+                            "ident": {
+                              "name": "CurrentTime",
+                              "ident_type": "String"
+                            },
+                            "params": []
+                          }
+                        },
+                        {
+                          "Integer": 2
+                        }
+                      ]
+                    }
+                  }
+                ]
+              ]
+            }
+          },
+          {
+            "If": {
+              "cond": {
+                "Binary": {
+                  "left": {
+                    "Path": {
+                      "components": [
+                        "Hour"
+                      ],
+                      "final_type": null
+                    }
+                  },
+                  "right": {
+                    "Integer": 12
+                  },
+                  "op": "GreaterOrEqual"
+                }
+              },
+              "statements": [
+                {
+                  "VarAssign": {
+                    "scope": null,
+                    "defs": [
+                      [
+                        {
+                          "components": [
+                            "PM"
+                          ],
+                          "final_type": null
+                        },
+                        {
+                          "Integer": 1
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ],
+              "else_if": []
+            }
+          },
+          {
+            "If": {
+              "cond": {
+                "Binary": {
+                  "left": {
+                    "Path": {
+                      "components": [
+                        "Hour"
+                      ],
+                      "final_type": null
+                    }
+                  },
+                  "right": {
+                    "Integer": 12
+                  },
+                  "op": "Greater"
+                }
+              },
+              "statements": [
+                {
+                  "VarAssign": {
+                    "scope": null,
+                    "defs": [
+                      [
+                        {
+                          "components": [
+                            "Hour"
+                          ],
+                          "final_type": null
+                        },
+                        {
+                          "Binary": {
+                            "left": {
+                              "Path": {
+                                "components": [
+                                  "Hour"
+                                ],
+                                "final_type": null
+                              }
+                            },
+                            "right": {
+                              "Integer": 12
+                            },
+                            "op": "Sub"
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ],
+              "else_if": []
+            }
+          },
+          {
+            "If": {
+              "cond": {
+                "Binary": {
+                  "left": {
+                    "Path": {
+                      "components": [
+                        "Hour"
+                      ],
+                      "final_type": null
+                    }
+                  },
+                  "right": {
+                    "Integer": 0
+                  },
+                  "op": "Equal"
+                }
+              },
+              "statements": [
+                {
+                  "VarAssign": {
+                    "scope": null,
+                    "defs": [
+                      [
+                        {
+                          "components": [
+                            "Hour"
+                          ],
+                          "final_type": null
+                        },
+                        {
+                          "Integer": 12
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ],
+              "else_if": []
+            }
+          },
+          {
+            "FunctionCall": {
+              "ident": {
+                "name": "Cls",
+                "ident_type": null
+              },
+              "params": []
+            }
+          },
+          {
+            "FunctionCall": {
+              "ident": {
+                "name": "Color",
+                "ident_type": null
+              },
+              "params": [
+                {
+                  "Integer": 0
+                },
+                {
+                  "Integer": 255
+                },
+                {
+                  "Integer": 0
+                }
+              ]
+            }
+          },
+          {
+            "If": {
+              "cond": {
+                "Binary": {
+                  "left": {
+                    "Path": {
+                      "components": [
+                        "PM"
+                      ],
+                      "final_type": null
+                    }
+                  },
+                  "right": {
+                    "Integer": 1
+                  },
+                  "op": "Equal"
+                }
+              },
+              "statements": [
+                {
+                  "FunctionCall": {
+                    "ident": {
+                      "name": "Text",
+                      "ident_type": null
+                    },
+                    "params": [
+                      {
+                        "Integer": 5
+                      },
+                      {
+                        "Integer": 5
+                      },
+                      {
+                        "String": "PM"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "else_if": []
+            }
+          },
+          {
+            "FunctionCall": {
+              "ident": {
+                "name": "Color",
+                "ident_type": null
+              },
+              "params": [
+                {
+                  "Integer": 255
+                },
+                {
+                  "Integer": 255
+                },
+                {
+                  "Integer": 255
+                }
+              ]
+            }
+          },
+          {
+            "For": {
+              "name": {
+                "name": "bit",
+                "ident_type": null
+              },
+              "mode": {
+                "Range": {
+                  "from": {
+                    "Integer": 0
+                  },
+                  "to": {
+                    "Integer": 5
+                  }
+                }
+              },
+              "statements": [
+                {
+                  "VarAssign": {
+                    "scope": null,
+                    "defs": [
+                      [
+                        {
+                          "components": [
+                            "xpos"
+                          ],
+                          "final_type": null
+                        },
+                        {
+                          "Binary": {
+                            "left": {
+                              "Integer": 20
+                            },
+                            "right": {
+                              "Binary": {
+                                "left": {
+                                  "Integer": 6
+                                },
+                                "right": {
+                                  "Path": {
+                                    "components": [
+                                      "bit"
+                                    ],
+                                    "final_type": null
+                                  }
+                                },
+                                "op": "Sub"
+                              }
+                            },
+                            "op": "Mult"
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                },
+                {
+                  "VarAssign": {
+                    "scope": null,
+                    "defs": [
+                      [
+                        {
+                          "components": [
+                            "binaryMask"
+                          ],
+                          "final_type": null
+                        },
+                        {
+                          "Binary": {
+                            "left": {
+                              "Integer": 2
+                            },
+                            "right": {
+                              "Path": {
+                                "components": [
+                                  "bit"
+                                ],
+                                "final_type": null
+                              }
+                            },
+                            "op": "Xor"
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                },
+                {
+                  "If": {
+                    "cond": {
+                      "Binary": {
+                        "left": {
+                          "Path": {
+                            "components": [
+                              "bit"
+                            ],
+                            "final_type": null
+                          }
+                        },
+                        "right": {
+                          "Integer": 4
+                        },
+                        "op": "Less"
+                      }
+                    },
+                    "statements": [
+                      {
+                        "If": {
+                          "cond": {
+                            "Binary": {
+                              "left": {
+                                "Path": {
+                                  "components": [
+                                    "hour"
+                                  ],
+                                  "final_type": null
+                                }
+                              },
+                              "right": {
+                                "Path": {
+                                  "components": [
+                                    "binaryMask"
+                                  ],
+                                  "final_type": null
+                                }
+                              },
+                              "op": "BoolAnd"
+                            }
+                          },
+                          "statements": [
+                            {
+                              "FunctionCall": {
+                                "ident": {
+                                  "name": "Text",
+                                  "ident_type": null
+                                },
+                                "params": [
+                                  {
+                                    "Path": {
+                                      "components": [
+                                        "xpos"
+                                      ],
+                                      "final_type": null
+                                    }
+                                  },
+                                  {
+                                    "Integer": 5
+                                  },
+                                  {
+                                    "String": "1"
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "else_if": [
+                            {
+                              "Else": {
+                                "statements": [
+                                  {
+                                    "FunctionCall": {
+                                      "ident": {
+                                        "name": "Text",
+                                        "ident_type": null
+                                      },
+                                      "params": [
+                                        {
+                                          "Path": {
+                                            "components": [
+                                              "xpos"
+                                            ],
+                                            "final_type": null
+                                          }
+                                        },
+                                        {
+                                          "Integer": 5
+                                        },
+                                        {
+                                          "String": "0"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "else_if": []
+                  }
+                },
+                {
+                  "If": {
+                    "cond": {
+                      "Binary": {
+                        "left": {
+                          "Path": {
+                            "components": [
+                              "minute"
+                            ],
+                            "final_type": null
+                          }
+                        },
+                        "right": {
+                          "Path": {
+                            "components": [
+                              "binaryMask"
+                            ],
+                            "final_type": null
+                          }
+                        },
+                        "op": "BoolAnd"
+                      }
+                    },
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "Text",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "Path": {
+                                "components": [
+                                  "xpos"
+                                ],
+                                "final_type": null
+                              }
+                            },
+                            {
+                              "Integer": 25
+                            },
+                            {
+                              "String": "1"
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "else_if": [
+                      {
+                        "Else": {
+                          "statements": [
+                            {
+                              "FunctionCall": {
+                                "ident": {
+                                  "name": "Text",
+                                  "ident_type": null
+                                },
+                                "params": [
+                                  {
+                                    "Path": {
+                                      "components": [
+                                        "xpos"
+                                      ],
+                                      "final_type": null
+                                    }
+                                  },
+                                  {
+                                    "Integer": 25
+                                  },
+                                  {
+                                    "String": "0"
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "If": {
+                    "cond": {
+                      "Binary": {
+                        "left": {
+                          "Path": {
+                            "components": [
+                              "second"
+                            ],
+                            "final_type": null
+                          }
+                        },
+                        "right": {
+                          "Path": {
+                            "components": [
+                              "binaryMask"
+                            ],
+                            "final_type": null
+                          }
+                        },
+                        "op": "BoolAnd"
+                      }
+                    },
+                    "statements": [
+                      {
+                        "FunctionCall": {
+                          "ident": {
+                            "name": "Text",
+                            "ident_type": null
+                          },
+                          "params": [
+                            {
+                              "Path": {
+                                "components": [
+                                  "xpos"
+                                ],
+                                "final_type": null
+                              }
+                            },
+                            {
+                              "Integer": 45
+                            },
+                            {
+                              "String": "1"
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "else_if": [
+                      {
+                        "Else": {
+                          "statements": [
+                            {
+                              "FunctionCall": {
+                                "ident": {
+                                  "name": "Text",
+                                  "ident_type": null
+                                },
+                                "params": [
+                                  {
+                                    "Path": {
+                                      "components": [
+                                        "xpos"
+                                      ],
+                                      "final_type": null
+                                    }
+                                  },
+                                  {
+                                    "Integer": 45
+                                  },
+                                  {
+                                    "String": "0"
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "FunctionCall": {
+              "ident": {
+                "name": "Color",
+                "ident_type": null
+              },
+              "params": [
+                {
+                  "Integer": 255
+                },
+                {
+                  "Integer": 0
+                },
+                {
+                  "Integer": 0
+                }
+              ]
+            }
+          },
+          {
+            "FunctionCall": {
+              "ident": {
+                "name": "Text",
+                "ident_type": null
+              },
+              "params": [
+                {
+                  "Integer": 5
+                },
+                {
+                  "Integer": 65
+                },
+                {
+                  "Binary": {
+                    "left": {
+                      "String": "Decimal: "
+                    },
+                    "right": {
+                      "Function": {
+                        "ident": {
+                          "name": "CurrentTime",
+                          "ident_type": "String"
+                        },
+                        "params": []
+                      }
+                    },
+                    "op": "Add"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "FunctionCall": {
+              "ident": {
+                "name": "Color",
+                "ident_type": null
+              },
+              "params": [
+                {
+                  "Integer": 255
+                },
+                {
+                  "Integer": 255
+                },
+                {
+                  "Integer": 255
+                }
+              ]
+            }
+          },
+          {
+            "FunctionCall": {
+              "ident": {
+                "name": "WaitTimer",
+                "ident_type": null
+              },
+              "params": [
+                {
+                  "Path": {
+                    "components": [
+                      "secondTimer"
+                    ],
+                    "final_type": null
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
