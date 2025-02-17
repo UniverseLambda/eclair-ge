@@ -20,6 +20,24 @@ Function PrintMsg(txt$,totallyUseless%=6)
 	Print "BANGER"+txt$
 End Function
 
+For n.NPCs = Each NPCs
+	If n\NPCtype = NPCtype096 Then
+		n\State = 0
+		; Original line:
+		; StopStream_Strict(n\SoundChn) : n\SoundChn=0
+
+		StopStream_Strict(n\SoundChn)
+		n\SoundChn=0
+
+		If n\SoundChn2<>0
+			; Original line:
+			; StopStream_Strict(n\SoundChn2) : n\SoundChn2=0
+			StopStream_Strict(n\SoundChn2)
+			n\SoundChn2=0
+		EndIf
+		Exit
+	EndIf
+Next
 
 Repeat
  	Hour = Left(CurrentTime$(),2)

@@ -6,7 +6,7 @@ use crate::{
     parser::expect_token,
 };
 
-use super::{Expr, Ident, Parsable};
+use super::{Expr, Ident, IdentPath, Parsable};
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub enum VarScope {
@@ -18,7 +18,7 @@ pub enum VarScope {
 #[derive(Debug, Clone, Serialize)]
 pub struct VarAssign {
     pub scope: Option<VarScope>,
-    pub defs: Vec<(Ident, Option<Expr>)>,
+    pub defs: Vec<(IdentPath, Option<Expr>)>,
 }
 
 impl Parsable for VarAssign {
@@ -46,7 +46,7 @@ impl Parsable for VarAssign {
         let mut defs = Vec::new();
 
         loop {
-            let ident = Ident::parse(parser)?;
+            let ident = IdentPath::parse(parser)?;
             let Some(operator) = parser.current_token()? else {
                 defs.push((ident, None));
                 break;

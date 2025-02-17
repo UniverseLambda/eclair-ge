@@ -14,8 +14,8 @@ const KEYWORDS: [&str; 28] = [
 
 const FUNCTION_KEYWORDS: [&str; 5] = ["Print", "AppTitle", "Graphics", "Cls", "Text"];
 
-const OPERATORS: [&str; 15] = [
-    "(", ")", "=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^", ",", ".",
+const OPERATORS: [&str; 16] = [
+    "(", ")", "=", "<>", "<", ">", "<=", ">=", "+", "-", "*", "/", "^", ",", ".", ":",
 ];
 
 const IDENT_STRING_SUFFIX: char = '$';
@@ -169,7 +169,7 @@ impl<R: Read> Tokenizer<R> {
         );
 
         while let Some(v) = self.next_char()? {
-            if v.is_alphabetic() {
+            if v.is_alphanumeric() || v == '_' {
                 word_buffer.push(v);
             } else {
                 break;

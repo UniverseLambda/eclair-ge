@@ -51,6 +51,7 @@ impl<R: Read> Parser<R> {
             &[
                 TokenTypeId::Keyword,
                 TokenTypeId::Ident,
+                TokenTypeId::Path,
                 TokenTypeId::FunctionKeyword,
             ],
         )?;
@@ -67,6 +68,7 @@ impl<R: Read> Parser<R> {
             (TokenType::Keyword, "Repeat") => RepeatLoop::parse(self).map(Statement::Repeat)?,
             (TokenType::Keyword, "Type") => PackedDecl::parse(self).map(Statement::PackedDecl)?,
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
+            (TokenType::Path(_, _), _) => VarAssign::parse(self).map(Statement::VarAssign)?,
             (TokenType::FunctionKeyword, _) => {
                 FunctionCall::parse(self).map(Statement::FunctionCall)?
             }
@@ -173,6 +175,7 @@ impl<R: Read> Parser<R> {
 
         if let Expr::Path(ident_path) = current_expr {
             if ident_path.components.len() != 1 {
+                self.consume_token();
                 return Ok(Expr::Path(ident_path));
             }
 

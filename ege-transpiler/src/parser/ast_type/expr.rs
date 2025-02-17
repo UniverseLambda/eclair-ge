@@ -133,12 +133,9 @@ impl Expr {
             parser.current_token()?,
         );
 
-        let Some(current_token) = parser
-            .current_token()
-            .with_context(|| "Parser::parse_expr_single_pass")?
-        else {
-            return parser.unexpected_eof();
-        };
+        let current_token = parser
+            .required_token()
+            .with_context(|| "Parser::parse_expr_single_pass")?;
 
         Ok(match (current_token.token_type, current_token.content) {
             (TokenType::FloatLiteral(v), _) => Expr::Float(v),

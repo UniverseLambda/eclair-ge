@@ -13,9 +13,14 @@ use super::{Expr, Ident, Parsable, Statement};
 #[derive(Debug, Clone, Serialize)]
 pub struct ForLoop {
     pub name: Ident,
-    pub from: Expr,
-    pub to: Expr,
+    pub mode: ForLoopMode,
     pub statements: Vec<Statement>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub enum ForLoopMode {
+    Range { from: Expr, to: Expr },
+    Each { iterator: Expr },
 }
 
 impl Parsable for ForLoop {
@@ -34,17 +39,30 @@ impl Parsable for ForLoop {
 
         let eq_operator = parser.required_token()?;
         expect_token(&eq_operator, TokenTypeId::Operator, "=")?;
-        parser.consume_token();
 
-        // TODO: support for Each here
+        let disc = parser.required_next_token()?;
 
-        let initial_value = Expr::parse(parser)?;
+        let mode = if disc.is(TokenTypeId::Keyword, "Each") {
+            // TODO: support for Each here
+            parser.required_next_token()?;
 
-        let to_keyword = parser.required_token()?;
-        expect_token(&to_keyword, TokenTypeId::Keyword, "To")?;
-        parser.consume_token();
+            ForLoopMode::Each {
+                iterator: Expr::parse(parser)?,
+            }
+        } else {
+            let initial_value = Expr::parse(parser)?;
 
-        let final_value = Expr::parse(parser)?;
+            let to_keyword = parser.required_token()?;
+            expect_token(&to_keyword, TokenTypeId::Keyword, "To")?;
+            parser.consume_token();
+
+            let final_value = Expr::parse(parser)?;
+
+            ForLoopMode::Range {
+                from: initial_value,
+                to: final_value,
+            }
+        };
 
         let lf = parser.required_token()?;
         expect_token_type(&lf, TokenTypeId::EndOfLine)?;
@@ -53,8 +71,7 @@ impl Parsable for ForLoop {
 
         Ok(ForLoop {
             name: it_ident,
-            from: initial_value,
-            to: final_value,
+            mode,
             statements,
         })
     }
