@@ -497,17 +497,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75b325c5dbd37f80359721ad39aca5a29fb04c89279657cffdda8736d0c0b9d2"
 
 [[package]]
-name = "ege-runtime"
-version = "0.1.0"
-dependencies = [
- "env_logger",
- "log",
- "wgpu",
- "winit",
-]
-
-[[package]]
-name = "ege-transpiler"
+name = "ege-compiler"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -517,6 +507,16 @@ dependencies = [
  "log",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "ege-runtime"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "log",
+ "wgpu",
+ "winit",
 ]
 
 [[package]]
