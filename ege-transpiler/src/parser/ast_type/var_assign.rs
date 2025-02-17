@@ -1,4 +1,5 @@
 use anyhow::bail;
+use log::debug;
 use serde::Serialize;
 
 use crate::{
@@ -23,7 +24,7 @@ pub struct VarAssign {
 
 impl Parsable for VarAssign {
     fn parse(parser: &mut crate::parser::Parser<impl std::io::Read>) -> anyhow::Result<Self> {
-        eprintln!(
+        debug!(
             "parse_expr: current_token: {:?}, peeked: {:?}",
             parser.current_token()?,
             parser.peek_token()?

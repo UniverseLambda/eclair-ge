@@ -5,6 +5,7 @@ use ast_type::{
     Expr, ForLoop, FunctionCall, FunctionDecl, If, Include, Insert, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Select, Statement, VarAssign
 };
 use ext::TokenExt;
+use log::{debug, trace, warn};
 
 use crate::lexer::{Token, TokenType, TokenTypeId, Tokenizer};
 
@@ -103,7 +104,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn parse_statement_from_ident(&mut self) -> Result<Statement> {
-        eprintln!(
+        debug!(
             "parse_statement_from_ident: current_token: {:?}, peeked: {:?}",
             self.current_token()?,
             self.peek_token()?
@@ -156,16 +157,24 @@ impl<R: Read> Parser<R> {
                 block_stopper = token.clone();
                 break;
             } else if token.is(TokenTypeId::Keyword, "End") {
-                if let Some(token) = self.next_token()? {
-                    expect_token_type(&token, TokenTypeId::Keyword)?;
+                if let Some(nxt_token) = self.next_token()? {
+                    if nxt_token.is(TokenTypeId::EndOfLine, "\n") {
+                        warn!("{}:{}:{}: missing terminator after End (LF)", nxt_token.source_path, nxt_token.line, nxt_token.column);
 
-                    expect_token_content(&token, block_end)?;
-                    block_stopper = token.clone();
+                        block_stopper = token;
+                        break;
+                    }
+
+                    expect_token_type(&nxt_token, TokenTypeId::Keyword)?;
+                    expect_token_content(&nxt_token, block_end)?;
+
+                    block_stopper = nxt_token.clone();
                     break;
                 } else {
-                    return self
-                        .unexpected_eof()
-                        .with_context(|| "Parser::parse_statement_block");
+                    warn!("{}:{}:{}: missing terminator after End (EOF)", token.source_path, token.line, token.column);
+
+                    block_stopper = token;
+                    break;
                 }
             }
 
@@ -191,7 +200,7 @@ impl<R: Read> Parser<R> {
     }
 
     fn might_be_a_func_call(&mut self, current_expr: Expr) -> Result<Expr> {
-        eprintln!(
+        debug!(
             "might_be_a_func_call: current_token: {:?}, peeked: {:?}",
             self.current_token()?,
             self.peek_token()?
@@ -261,7 +270,7 @@ impl<R: Read> Parser<R> {
         Ok(self
             ._current_token
             .clone()
-            .inspect(|token| eprintln!("TOKEN: {token:?}")))
+            .inspect(|token| trace!("TOKEN: {token:?}")))
     }
 
     pub fn peek_token(&mut self) -> Result<Option<Token>> {

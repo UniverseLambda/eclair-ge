@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use anyhow::Result;
+use log::debug;
 use serde::Serialize;
 
 use crate::{
@@ -18,7 +19,7 @@ pub struct FunctionCall {
 
 impl Parsable for FunctionCall {
     fn parse(parser: &mut Parser<impl Read>) -> Result<Self> {
-        eprintln!(
+        debug!(
             "parse_function_call: current_token: {:?}, peeked: {:?}",
             parser.current_token()?,
             parser.peek_token()?

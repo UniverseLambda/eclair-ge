@@ -1,5 +1,6 @@
 use std::io::Read;
 
+use log::debug;
 use serde::Serialize;
 
 use crate::{
@@ -29,7 +30,7 @@ pub enum Otherwise /* Feeling like a clown today */ {
 
 impl Parsable for If {
     fn parse(parser: &mut Parser<impl Read>) -> anyhow::Result<Self> {
-        eprintln!(
+        debug!(
             "parse_if: current_token: {:?}, peeked: {:?}",
             parser.current_token()?,
             parser.peek_token()?

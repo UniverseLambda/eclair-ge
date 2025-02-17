@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use anyhow::Context;
+use log::debug;
 use serde::Serialize;
 
 use crate::{
@@ -25,7 +26,7 @@ pub enum ForLoopMode {
 
 impl Parsable for ForLoop {
     fn parse(parser: &mut Parser<impl Read>) -> anyhow::Result<Self> {
-        eprintln!(
+        debug!(
             "parse_for: current_token: {:#?}, peeked: {:#?}",
             parser.current_token()?,
             parser.peek_token()?

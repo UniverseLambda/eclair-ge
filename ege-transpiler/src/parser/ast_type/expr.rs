@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use anyhow::{bail, Context};
+use log::{debug, trace};
 use serde::Serialize;
 
 use crate::{
@@ -49,7 +50,7 @@ pub struct BinaryExpr {
 
 impl Parsable for Expr {
     fn parse(parser: &mut Parser<impl Read>) -> anyhow::Result<Self> {
-        eprintln!(
+        debug!(
             "parse_expr: current_token: {:?}, peeked: {:?}",
             parser.current_token()?,
             parser.peek_token()?
@@ -112,7 +113,7 @@ impl Parsable for Expr {
 impl Expr {
     // This function doesn't consume its last token.
     fn parse_single_pass(parser: &mut Parser<impl Read>) -> anyhow::Result<Self> {
-        eprintln!(
+        debug!(
             "parse_expr_single_pass: current_token: {:#?}",
             parser.current_token()?,
         );
@@ -132,7 +133,7 @@ impl Expr {
 
         // FIXME: Handle expressions that might be starting with keywords like "Not"
 
-        eprintln!(
+        trace!(
             "POST parse_expr_single_pass: current_token: {:#?}",
             parser.current_token()?,
         );
