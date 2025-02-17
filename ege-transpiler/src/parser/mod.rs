@@ -2,9 +2,10 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 use ast_type::{
-    Expr, ForLoop, FunctionCall, FunctionDecl, If, Include, Insert, NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Select, Statement, VarAssign
-    ArrayDecls, Expr, ForLoop, FunctionCall, FunctionDecl, If, PackedDecl, Parsable, Program,
-    RepeatLoop, Statement, VarAssign,
+    ArrayDecls, Expr, Expr, ForLoop, ForLoop, FunctionCall, FunctionCall, FunctionDecl,
+    FunctionDecl, If, If, Include, Insert, NoDataStatement, PackedDecl, PackedDecl, Parsable,
+    Parsable, Program, Program, RepeatLoop, RepeatLoop, Select, Statement, Statement, VarAssign,
+    VarAssign,
 };
 use ext::TokenExt;
 use log::{debug, trace, warn};
@@ -82,11 +83,21 @@ impl<R: Read> Parser<R> {
             (TokenType::FunctionKeyword, _) => {
                 FunctionCall::parse(self).map(Statement::FunctionCall)?
             }
-            (t, v) => bail!("{}:{}:{}: unexpected token: `{v}` (type: {t:?})", disc.source_path, disc.line, disc.column),
+            (t, v) => bail!(
+                "{}:{}:{}: unexpected token: `{v}` (type: {t:?})",
+                disc.source_path,
+                disc.line,
+                disc.column
+            ),
         };
 
         if self.expect_inlinable && !statement.is_inlinable() {
-            bail!("{}:{}:{}: statement {statement:?} is not inlinable.", disc.source_path, disc.line, disc.column);
+            bail!(
+                "{}:{}:{}: statement {statement:?} is not inlinable.",
+                disc.source_path,
+                disc.line,
+                disc.column
+            );
         }
 
         self.expect_inlinable = false;
@@ -98,7 +109,12 @@ impl<R: Read> Parser<R> {
                 self.expect_inlinable = true;
 
                 if !statement.is_inlinable() {
-                    bail!("{}:{}:{}: statement {statement:?} is not inlinable.", disc.source_path, disc.line, disc.column);
+                    bail!(
+                        "{}:{}:{}: statement {statement:?} is not inlinable.",
+                        disc.source_path,
+                        disc.line,
+                        disc.column
+                    );
                 }
             }
         }
@@ -122,7 +138,7 @@ impl<R: Read> Parser<R> {
         match peeked.expect_any_content(&["=", "("])?.content.as_str() {
             "=" => VarAssign::parse(self).map(Statement::VarAssign),
             "(" => FunctionCall::parse(self).map(Statement::FunctionCall),
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -162,7 +178,10 @@ impl<R: Read> Parser<R> {
             } else if token.is(TokenTypeId::Keyword, "End") {
                 if let Some(nxt_token) = self.next_token()? {
                     if nxt_token.is(TokenTypeId::EndOfLine, "\n") {
-                        warn!("{}:{}:{}: missing terminator after End (LF)", nxt_token.source_path, nxt_token.line, nxt_token.column);
+                        warn!(
+                            "{}:{}:{}: missing terminator after End (LF)",
+                            nxt_token.source_path, nxt_token.line, nxt_token.column
+                        );
 
                         block_stopper = token;
                         break;
@@ -174,7 +193,10 @@ impl<R: Read> Parser<R> {
                     block_stopper = nxt_token.clone();
                     break;
                 } else {
-                    warn!("{}:{}:{}: missing terminator after End (EOF)", token.source_path, token.line, token.column);
+                    warn!(
+                        "{}:{}:{}: missing terminator after End (EOF)",
+                        token.source_path, token.line, token.column
+                    );
 
                     block_stopper = token;
                     break;
@@ -299,7 +321,12 @@ impl<R: Read> Parser<R> {
             }
 
             if self.expect_inlinable {
-                bail!("{}:{}:{}: expected inlinable statement, but got line return.", token.source_path, token.line, token.column);
+                bail!(
+                    "{}:{}:{}: expected inlinable statement, but got line return.",
+                    token.source_path,
+                    token.line,
+                    token.column
+                );
             }
 
             self.next_token()?;
@@ -309,7 +336,12 @@ impl<R: Read> Parser<R> {
     }
 
     fn unexpected_eof<T>(&self) -> Result<T> {
-        bail!("{}:{}:{}: unexpected End-Of-File", self.token_source.source_path(), self.token_source.line(), self.token_source.column());
+        bail!(
+            "{}:{}:{}: unexpected End-Of-File",
+            self.token_source.source_path(),
+            self.token_source.line(),
+            self.token_source.column()
+        );
     }
 }
 
@@ -317,7 +349,12 @@ fn expect_token(token: &Token, tktype: TokenTypeId, content: &str) -> Result<()>
     if token.token_type.to_id() == tktype && token.content == content {
         Ok(())
     } else {
-        bail!("{}:{}:{}: unexpected token: {token:?}, expected: {content:?} (type: {tktype:?})", token.source_path, token.line, token.column);
+        bail!(
+            "{}:{}:{}: unexpected token: {token:?}, expected: {content:?} (type: {tktype:?})",
+            token.source_path,
+            token.line,
+            token.column
+        );
     }
 }
 
@@ -329,7 +366,12 @@ fn expect_token_content(token: &Token, content: &str) -> Result<()> {
     if token.content == content {
         Ok(())
     } else {
-        bail!("{}:{}:{}: unexpected token: {token:?}, expected: {content:?}", token.source_path, token.line, token.column);
+        bail!(
+            "{}:{}:{}: unexpected token: {token:?}, expected: {content:?}",
+            token.source_path,
+            token.line,
+            token.column
+        );
     }
 }
 
@@ -342,5 +384,10 @@ fn expect_any_token_type(token: &Token, tktypes: &[TokenTypeId]) -> Result<()> {
         }
     }
 
-    bail!("{}:{}:{}: unexpected token: {token:?}, expected: {tktypes:?}", token.source_path, token.line, token.column);
+    bail!(
+        "{}:{}:{}: unexpected token: {token:?}, expected: {tktypes:?}",
+        token.source_path,
+        token.line,
+        token.column
+    );
 }
