@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::bail;
 
 use crate::parser::{
-    ArrayDecl, FunctionDecl, PackedDecl, Program, Select, SelectCase, Statement, VarAssign, VarScope
+    ArrayDecl, FunctionDecl, PackedDecl, Program, Return, Select, SelectCase, Statement, VarAssign, VarScope
 };
 
 use super::{AnalyzedProgram, ArgInfo, Constant, FunctionInfo, StructInfo, Typing, VarInfo};
@@ -125,6 +125,7 @@ impl Analyzable for Statement {
             }
             Statement::FunctionDecl(function_decl) => function_decl.extract_declarations(program, function),
             Statement::Select(select) => select.extract_declarations(program, function),
+            Statement::Return(ret) => ret.extract_declarations(program, function),
             Statement::Insert(_)
             | Statement::NoData(_)
             | Statement::FunctionCall(_) => Ok(()),
@@ -243,6 +244,7 @@ impl Analyzable for FunctionDecl {
             args,
             args_order,
             vars: HashMap::new(),
+            phase0_checked: false,
         });
 
 		self.statements.extract_declarations(program, &mut func_info)?;
@@ -273,4 +275,28 @@ impl Analyzable for SelectCase {
 	) -> anyhow::Result<()> {
 		self.statements.extract_declarations(program, function)
 	}
+}
+
+impl Analyzable for Return {
+    fn extract_declarations(
+        &self,
+        _: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<()> {
+        let Some(function) = function else {
+            bail!("Return statement outside of a function");
+        };
+
+        if !function.phase0_checked && function.return_type == Typing::Integer {
+            if self.value.is_some() {
+                function.return_type = Typing::Integer;
+            } else {
+                function.return_type = Typing::Void;
+            }
+        }
+        function.phase0_checked = true;
+
+
+        Ok(())
+    }
 }

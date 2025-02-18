@@ -4,7 +4,7 @@ use anyhow::{bail, Context, Ok, Result};
 pub use ast_type::{
     ArrayDecl, ArrayDecls, Expr, ForLoop, FunctionCall, FunctionDecl, If, Include, Insert,
     NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Select, SelectCase, Statement,
-    VarAssign, VarScope,
+    VarAssign, VarScope, Return
 };
 use ext::TokenExt;
 use log::{debug, trace, warn};
@@ -77,6 +77,7 @@ impl<R: Read> Parser<R> {
             (TokenType::Keyword, "Include") => Include::parse(self).map(Statement::Include)?,
             (TokenType::Keyword, "Select") => Select::parse(self).map(Statement::Select)?,
             (TokenType::Keyword, "Dim") => ArrayDecls::parse(self).map(Statement::ArrayDecl)?,
+            (TokenType::Keyword, "Return") => Return::parse(self).map(Statement::Return)?,
             (TokenType::Ident(_), _) => self.parse_statement_from_ident()?,
             (TokenType::Path(_, _), _) => VarAssign::parse(self).map(Statement::VarAssign)?,
             (TokenType::FunctionKeyword, _) => {

@@ -30,8 +30,9 @@ pub struct FunctionInfo {
     pub name: String,
     pub return_type: Typing,
     pub args: HashMap<String, ArgInfo>,
-	pub args_order: Vec<String>,
+    pub args_order: Vec<String>,
     pub vars: HashMap<String, VarInfo>,
+    pub phase0_checked: bool,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -71,7 +72,7 @@ impl TryFrom<crate::parser::Expr> for Constant {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, PartialEq)]
 pub enum Typing {
     Void,
     Integer,

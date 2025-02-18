@@ -1,7 +1,10 @@
 use super::Typing;
 
 #[derive(Debug, Clone)]
-pub struct Expr {
+pub struct TypedExpr {
 	pub output_type: Typing
 }
 
+pub enum TypedExprValue {
+
+}

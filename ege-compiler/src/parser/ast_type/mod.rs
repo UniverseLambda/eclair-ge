@@ -8,6 +8,7 @@ mod include;
 mod insert;
 mod loops;
 mod packed_type;
+mod return_statement;
 mod select;
 mod var_assign;
 
@@ -21,6 +22,7 @@ pub use include::*;
 pub use insert::*;
 pub use loops::*;
 pub use packed_type::*;
+pub use return_statement::*;
 pub use select::*;
 pub use var_assign::*;
 
@@ -56,6 +58,7 @@ pub enum Statement {
     NoData(NoDataStatement),
     Include(Include),
     Select(Select),
+    Return(Return),
 }
 
 #[derive(Debug, Clone, Serialize)]
