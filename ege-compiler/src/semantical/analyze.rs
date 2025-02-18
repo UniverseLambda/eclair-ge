@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::bail;
+use log::debug;
 
 use crate::parser::{
     ArrayDecl, FunctionDecl, PackedDecl, Program, Return, Select, SelectCase, Statement, VarAssign, VarScope
@@ -17,14 +18,22 @@ pub trait Analyzable {
 }
 
 pub fn analyze_program(program: Program) -> anyhow::Result<AnalyzedProgram> {
+    debug!("semantic analysis...");
+
     let mut result = AnalyzedProgram {
         structs: HashMap::new(),
         functions: HashMap::new(),
         global_vars: HashMap::new(),
         builtin_constants: HashMap::new(),
+        statements: vec![],
     };
 
+    debug!("sem: phase0: extracting declarations...");
+
     program.extract_declarations(&mut result, &mut None)?;
+
+    debug!("sem: phase1: properly typing the code tree...");
+    debug!("sem: phase1: NOT IMPLEMENTED YET");
 
     Ok(result)
 }
@@ -245,6 +254,7 @@ impl Analyzable for FunctionDecl {
             args_order,
             vars: HashMap::new(),
             phase0_checked: false,
+            statements: vec![]
         });
 
 		self.statements.extract_declarations(program, &mut func_info)?;
@@ -295,7 +305,6 @@ impl Analyzable for Return {
             }
         }
         function.phase0_checked = true;
-
 
         Ok(())
     }

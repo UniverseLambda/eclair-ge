@@ -2,11 +2,13 @@ use std::collections::HashMap;
 
 use anyhow::bail;
 use serde::Serialize;
+use statement::TypedStatement;
 
 use crate::lexer::IdentTyping;
 
 mod analyze;
 mod expr;
+mod statement;
 
 pub use analyze::analyze_program;
 
@@ -17,6 +19,8 @@ pub struct AnalyzedProgram {
     pub global_vars: HashMap<String, VarInfo>,
 
     pub builtin_constants: HashMap<String, Constant>,
+
+    pub statements: Vec<TypedStatement>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -32,6 +36,8 @@ pub struct FunctionInfo {
     pub args: HashMap<String, ArgInfo>,
     pub args_order: Vec<String>,
     pub vars: HashMap<String, VarInfo>,
+    pub statements: Vec<TypedStatement>,
+
     pub phase0_checked: bool,
 }
 

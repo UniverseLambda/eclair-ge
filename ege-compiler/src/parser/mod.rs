@@ -4,7 +4,7 @@ use anyhow::{bail, Context, Ok, Result};
 pub use ast_type::{
     ArrayDecl, ArrayDecls, Expr, ForLoop, FunctionCall, FunctionDecl, If, Include, Insert,
     NoDataStatement, PackedDecl, Parsable, Program, RepeatLoop, Select, SelectCase, Statement,
-    VarAssign, VarScope, Return
+    VarAssign, VarScope, Return, BinaryExprOp, UnaryExprOp, InsertRelPos, InsertPivot
 };
 use ext::TokenExt;
 use log::{debug, trace, warn};

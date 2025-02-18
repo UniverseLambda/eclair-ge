@@ -14,11 +14,6 @@ pub trait TokenExt: Sized {
 	fn expect_type(self, tk_type: TokenTypeId) -> Self::Output {
 		self.expect_any_type(&[tk_type])
 	}
-
-	fn expect_content(self, content: &str) -> Self::Output {
-		self.expect_any_content(&[content])
-	}
-
 }
 
 impl TokenExt for Token {

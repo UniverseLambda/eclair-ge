@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use anyhow::{bail, Context};
-use inkwell::{types::PointerType, values::{BasicValueEnum, IntMathValue, PointerValue}, AddressSpace};
+use inkwell::{values::BasicValueEnum, AddressSpace};
 use log::{debug, trace};
 use serde::Serialize;
 
@@ -190,9 +190,13 @@ impl Expr {
                     BinaryExprOp::BitXor => todo!(),
                     BinaryExprOp::Pow => todo!(),
                 }
-            },
+            }
             Expr::Null => {
-                let nullptr = state.context.i8_type().ptr_type(AddressSpace::default()).const_null();
+                let nullptr = state
+                    .context
+                    .i8_type()
+                    .ptr_type(AddressSpace::default())
+                    .const_null();
 
                 BasicValueEnum::PointerValue(nullptr)
             }
