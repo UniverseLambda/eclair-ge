@@ -1,4 +1,4 @@
-use log::{debug, info, Level};
+use log::{debug, error, info, Level};
 use semantical::analyze_program;
 use std::time::SystemTime;
 
@@ -45,12 +45,24 @@ fn main() {
         args.path.as_os_str().to_string_lossy()
     );
 
-    let file = std::fs::File::open(&args.path).unwrap();
+    let file = match std::fs::File::open(&args.path) {
+        Ok(v) => v,
+        Err(err) => {
+            error!("{}: could not open file: {err}", args.path.to_string_lossy());
+            std::process::exit(1);
+        }
+    };
 
     let lexer = lexer::Tokenizer::new(args.path.to_string_lossy().to_string(), file);
     let mut parser = parser::Parser::new(lexer);
 
-    let program = parser.parse_program().unwrap();
+    let program = match parser.parse_program() {
+        Ok(v) => v,
+        Err(err) => {
+            error!("{}", err.root_cause());
+            std::process::exit(1);
+        }
+    };
 
     if args.json_dump {
         let content = serde_json::to_string_pretty(&program).unwrap();
@@ -62,7 +74,13 @@ fn main() {
         std::fs::write(new_file_name, content).expect("Could not write JSON output");
     }
 
-    let analyzed_program = analyze_program(program).unwrap();
+    let analyzed_program = match analyze_program(program) {
+        Ok(v) => v,
+        Err(err) => {
+            error!("{}: {}", args.path.to_string_lossy(), err.root_cause());
+            std::process::exit(1);
+        }
+    };
 
 
     if args.json_dump {
