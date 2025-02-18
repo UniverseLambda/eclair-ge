@@ -1,2 +1,3 @@
 /target
-*.bb.json
+*.bb.ast.json
+*.bb.sem.json

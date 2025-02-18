@@ -1,11 +1,12 @@
 use std::io::Read;
 
 use anyhow::{bail, Context};
-use inkwell::values::BasicValueEnum;
+use inkwell::{types::PointerType, values::{BasicValueEnum, IntMathValue, PointerValue}, AddressSpace};
 use log::{debug, trace};
 use serde::Serialize;
 
 use crate::{
+    codegen::CodegenState,
     lexer::{TokenType, TokenTypeId},
     parser::{expect_any_token_type, Parser},
 };
@@ -18,6 +19,7 @@ pub enum Expr {
     String(String),
     Integer(i64),
     Float(f64),
+    Null,
     Binary(BinaryExpr),
     Path(IdentPath),
     CollectionFirst(Ident),
@@ -156,19 +158,53 @@ impl Parsable for Expr {
 }
 
 impl Expr {
-    fn codegen(&self) -> anyhow::Result<BasicValueEnum> {
-        match self {
+    fn codegen<'a, 'ctx>(
+        &self,
+        state: CodegenState<'a, 'ctx>,
+    ) -> anyhow::Result<BasicValueEnum<'ctx>> {
+        let value = match self {
+            Expr::Integer(v) => {
+                BasicValueEnum::IntValue(state.context.i64_type().const_int(*v as u64, true))
+            }
+            Expr::Float(v) => BasicValueEnum::FloatValue(state.context.f64_type().const_float(*v)),
+            Expr::String(v) => {
+                BasicValueEnum::ArrayValue(state.context.const_string(v.as_bytes(), false))
+            }
+            Expr::Binary(v) => {
+                let lhs = v.left.codegen(state)?;
+                let rhs = v.right.codegen(state)?;
+
+                match v.op {
+                    BinaryExprOp::Add => todo!(),
+                    BinaryExprOp::Sub => todo!(),
+                    BinaryExprOp::Mult => todo!(),
+                    BinaryExprOp::Div => todo!(),
+                    BinaryExprOp::Less => todo!(),
+                    BinaryExprOp::LessOrEqual => todo!(),
+                    BinaryExprOp::Equal => todo!(),
+                    BinaryExprOp::GreaterOrEqual => todo!(),
+                    BinaryExprOp::Greater => todo!(),
+                    BinaryExprOp::Different => todo!(),
+                    BinaryExprOp::BitAnd => todo!(),
+                    BinaryExprOp::BitOr => todo!(),
+                    BinaryExprOp::BitXor => todo!(),
+                    BinaryExprOp::Pow => todo!(),
+                }
+            },
+            Expr::Null => {
+                let nullptr = state.context.i8_type().ptr_type(AddressSpace::default()).const_null();
+
+                BasicValueEnum::PointerValue(nullptr)
+            }
             Expr::Function(function_call) => todo!(),
-            Expr::String(_) => todo!(),
-            Expr::Integer(_) => todo!(),
-            Expr::Float(_) => todo!(),
-            Expr::Binary(binary_expr) => todo!(),
             Expr::Path(ident_path) => todo!(),
             Expr::CollectionFirst(ident) => todo!(),
             Expr::CollectionLast(ident) => todo!(),
             Expr::New(ident) => todo!(),
             Expr::Unary(unary_expr) => todo!(),
-        }
+        };
+
+        Ok(value)
     }
 
     // This function doesn't consume its last token.
@@ -213,6 +249,7 @@ impl Expr {
             (TokenType::Ident(ident_type), name) => {
                 Expr::Path(IdentPath::from_single_name_and_type(name, ident_type))
             }
+            (TokenType::Keyword, v) if v == "Null" => Expr::Null,
             (TokenType::Keyword, v) if v == "First" => {
                 let type_token = parser.required_next_token()?;
 

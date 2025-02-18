@@ -1,18 +1,20 @@
 use log::{debug, info, Level};
+use semantical::analyze_program;
 use std::time::SystemTime;
 
 use clap::Parser;
 
 mod codegen;
+mod semantical;
 mod lexer;
 mod parser;
 
 #[derive(Debug, clap::Parser)]
 #[command(version, about, long_about = None)]
 pub struct Cli {
-    /// To output the AST in JSON format
+    /// To output the AST (parser and semantical analysis results) in JSON format
     #[arg(short, long, default_value_t = false)]
-    json_ast: bool,
+    json_dump: bool,
     /// Output path [default: a.out]
     #[arg(short, long)]
     output: Option<std::path::PathBuf>,
@@ -50,12 +52,25 @@ fn main() {
 
     let program = parser.parse_program().unwrap();
 
-    if args.json_ast {
+    if args.json_dump {
         let content = serde_json::to_string_pretty(&program).unwrap();
 
         let mut new_file_name = args.path.file_name().unwrap().to_os_string();
 
-        new_file_name.push(".json");
+        new_file_name.push(".ast.json");
+
+        std::fs::write(new_file_name, content).expect("Could not write JSON output");
+    }
+
+    let analyzed_program = analyze_program(program).unwrap();
+
+
+    if args.json_dump {
+        let content = serde_json::to_string_pretty(&analyzed_program).unwrap();
+
+        let mut new_file_name = args.path.file_name().unwrap().to_os_string();
+
+        new_file_name.push(".sem.json");
 
         std::fs::write(new_file_name, content).expect("Could not write JSON output");
     }
@@ -67,3 +82,4 @@ fn main() {
         duration.as_secs_f32()
     );
 }
+

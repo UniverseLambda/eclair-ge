@@ -1,5 +1,6 @@
 use inkwell::{builder::Builder, context::Context, module::Module};
 
+#[derive(Debug, Clone, Copy)]
 pub struct CodegenState<'a, 'ctx> {
     pub context: &'ctx Context,
     pub builder: &'a Builder<'ctx>,
