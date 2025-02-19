@@ -4,10 +4,13 @@ use anyhow::bail;
 use log::debug;
 
 use crate::parser::{
-    ArrayDecl, FunctionDecl, PackedDecl, Program, Return, Select, SelectCase, Statement, VarAssign, VarScope
+    ArrayDecl, FunctionDecl, PackedDecl, Program, Return, Select, SelectCase, VarAssign, VarScope,
 };
 
-use super::{AnalyzedProgram, ArgInfo, Constant, FunctionInfo, StructInfo, Typing, VarInfo};
+use super::{
+    statement::{TypedArrayDecl, TypedReturn, TypedSelect, TypedStatement, TypedVarAssign},
+    AnalyzedProgram, ArgInfo, Constant, FunctionInfo, StructInfo, Typing, VarInfo,
+};
 
 pub trait Analyzable {
     fn extract_declarations(
@@ -15,6 +18,16 @@ pub trait Analyzable {
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
     ) -> anyhow::Result<()>;
+}
+
+pub trait TypedGenerator {
+    type TypedOutput;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput>;
 }
 
 pub fn analyze_program(program: Program) -> anyhow::Result<AnalyzedProgram> {
@@ -88,6 +101,58 @@ pub fn insert_or_ignore_variable(
     }
 }
 
+pub fn get_variable_type(
+    program: &AnalyzedProgram,
+    function: &Option<FunctionInfo>,
+    var_name: &String,
+) -> anyhow::Result<Typing> {
+    let var_info = if let Some(func) = function.as_ref() {
+        func.vars.get(var_name)
+    } else {
+        program.global_vars.get(var_name)
+    };
+
+    let Some(var_info) = var_info else {
+        bail!("undefined variable: {var_name}");
+    };
+
+    Ok(var_info.typing.clone())
+}
+
+pub fn get_function_return_type(
+    program: &AnalyzedProgram,
+    func_name: &String,
+) -> anyhow::Result<Typing> {
+    let Some(func) = program.functions.get(func_name) else {
+        bail!("undefined function: {func_name}");
+    };
+
+    Ok(func.return_type.clone())
+}
+
+pub fn get_function_args_info(
+    program: &AnalyzedProgram,
+    func_name: &String,
+) -> anyhow::Result<Vec<ArgInfo>> {
+    let Some(func) = program.functions.get(func_name) else {
+        bail!("undefined function: {func_name}");
+    };
+
+    Ok(func
+        .args_order
+        .iter()
+        .map(|v| func.args.get(v).unwrap().clone())
+        .collect())
+}
+
+pub fn expect_typing(got: &Typing, expected: &Typing) -> anyhow::Result<()> {
+    if got != expected {
+        bail!("expected type {expected:?}, but got {got:?}");
+    } else {
+        Ok(())
+    }
+}
+
 impl Analyzable for Program {
     fn extract_declarations(
         &self,
@@ -95,6 +160,20 @@ impl Analyzable for Program {
         function: &mut Option<FunctionInfo>,
     ) -> anyhow::Result<()> {
         self.statements.extract_declarations(program, function)
+    }
+}
+
+impl TypedGenerator for Program {
+    type TypedOutput = Vec<TypedStatement>;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        self.statements
+            .generate_typed(program, function)
+            .map(|v| v.concat())
     }
 }
 
@@ -112,33 +191,21 @@ impl<T: Analyzable> Analyzable for Vec<T> {
     }
 }
 
-impl Analyzable for Statement {
-    fn extract_declarations(
-        &self,
+impl<T: TypedGenerator> TypedGenerator for Vec<T> {
+    type TypedOutput = Vec<T::TypedOutput>;
+
+    fn generate_typed(
+        self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
-    ) -> anyhow::Result<()> {
-        match self {
-            Statement::VarAssign(var_assign) => var_assign.extract_declarations(program, function),
-            Statement::If(if_decl) => if_decl.statements.extract_declarations(program, function),
-            Statement::PackedDecl(packed_decl) => {
-                packed_decl.extract_declarations(program, function)
-            }
-            Statement::Include(include) => include.program.extract_declarations(program, function),
-            Statement::For(for_loop) => for_loop.statements.extract_declarations(program, function),
-            Statement::Repeat(repeat_loop) => repeat_loop
-                .statements
-                .extract_declarations(program, function),
-            Statement::ArrayDecl(array_decls) => {
-                array_decls.extract_declarations(program, function)
-            }
-            Statement::FunctionDecl(function_decl) => function_decl.extract_declarations(program, function),
-            Statement::Select(select) => select.extract_declarations(program, function),
-            Statement::Return(ret) => ret.extract_declarations(program, function),
-            Statement::Insert(_)
-            | Statement::NoData(_)
-            | Statement::FunctionCall(_) => Ok(()),
+    ) -> anyhow::Result<Self::TypedOutput> {
+        let mut result = vec![];
+
+        for elem in self {
+            result.push(elem.generate_typed(program, function)?);
         }
+
+        Ok(result)
     }
 }
 
@@ -169,6 +236,18 @@ impl Analyzable for VarAssign {
         }
 
         Ok(())
+    }
+}
+
+impl TypedGenerator for VarAssign {
+    type TypedOutput = TypedVarAssign;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        todo!()
     }
 }
 
@@ -219,6 +298,18 @@ impl Analyzable for ArrayDecl {
     }
 }
 
+impl TypedGenerator for ArrayDecl {
+    type TypedOutput = TypedArrayDecl;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        todo!()
+    }
+}
+
 impl Analyzable for FunctionDecl {
     fn extract_declarations(
         &self,
@@ -235,16 +326,19 @@ impl Analyzable for FunctionDecl {
             };
 
             let default_value = if let Some(expr) = default_value {
-				Some(Constant::try_from(expr)?)
+                Some(Constant::try_from(expr)?)
             } else {
                 None
             };
 
-			args_order.push(var_info.name.clone());
-			args.insert(var_info.name.clone(), ArgInfo {
-				var_info,
-				default_value,
-			});
+            args_order.push(var_info.name.clone());
+            args.insert(
+                var_info.name.clone(),
+                ArgInfo {
+                    var_info,
+                    default_value,
+                },
+            );
         }
 
         let mut func_info = Some(FunctionInfo {
@@ -254,37 +348,53 @@ impl Analyzable for FunctionDecl {
             args_order,
             vars: HashMap::new(),
             phase0_checked: false,
-            statements: vec![]
+            statements: vec![],
         });
 
-		self.statements.extract_declarations(program, &mut func_info)?;
+        self.statements
+            .extract_declarations(program, &mut func_info)?;
 
-		if let Some(previous) = program.functions.insert(func_info.as_ref().unwrap().name.clone(), func_info.unwrap()) {
-			bail!("Multiple definition of function {}", previous.name);
-		}
+        if let Some(previous) = program
+            .functions
+            .insert(func_info.as_ref().unwrap().name.clone(), func_info.unwrap())
+        {
+            bail!("Multiple definition of function {}", previous.name);
+        }
 
         Ok(())
     }
 }
 
 impl Analyzable for Select {
-	fn extract_declarations(
-			&self,
-			program: &mut AnalyzedProgram,
-			function: &mut Option<FunctionInfo>,
-		) -> anyhow::Result<()> {
-		self.cases.extract_declarations(program, function)
-	}
+    fn extract_declarations(
+        &self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<()> {
+        self.cases.extract_declarations(program, function)
+    }
+}
+
+impl TypedGenerator for Select {
+    type TypedOutput = TypedSelect;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        todo!()
+    }
 }
 
 impl Analyzable for SelectCase {
-	fn extract_declarations(
-		&self,
-		program: &mut AnalyzedProgram,
-		function: &mut Option<FunctionInfo>,
-	) -> anyhow::Result<()> {
-		self.statements.extract_declarations(program, function)
-	}
+    fn extract_declarations(
+        &self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<()> {
+        self.statements.extract_declarations(program, function)
+    }
 }
 
 impl Analyzable for Return {
@@ -307,5 +417,17 @@ impl Analyzable for Return {
         function.phase0_checked = true;
 
         Ok(())
+    }
+}
+
+impl TypedGenerator for Return {
+    type TypedOutput = TypedReturn;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        todo!()
     }
 }

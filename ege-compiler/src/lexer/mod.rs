@@ -8,16 +8,25 @@ use serde::Serialize;
 
 const KEYWORDS: [&str; 37] = [
     "Global", "Local", "If", "Then", "ElseIf", "Else", "EndIf", "Include", "While", "Wend", "Null",
-    "Select", "Case", "Default", "End", "Repeat", "Forever", "Until", "Dim", "For", "To", "Each", "Next", "Exit",
-    "New", "Insert", "Before", "After", "First", "Last",
-    "Type", "Field", "Function", "Return", "And", "Or", "Not", // Syntaxical keywords
+    "Select", "Case", "Default", "End", "Repeat", "Forever", "Until", "Dim", "For", "To", "Each",
+    "Next", "Exit", "New", "Insert", "Before", "After", "First", "Last", "Type", "Field",
+    "Function", "Return", "And", "Or", "Not", // Syntaxical keywords
 ];
 
 const FUNCTION_KEYWORDS: [&str; 14] = [
-    "Print", "AppTitle", "Graphics", "Cls", "Text",
-    "DrawImage", "MaskImage",
-    "PlaySound", "PlaySound_Strict",
-    "FreeEntity", "PositionEntity", "ResetEntity", "ShowEntity",
+    "Print",
+    "AppTitle",
+    "Graphics",
+    "Cls",
+    "Text",
+    "DrawImage",
+    "MaskImage",
+    "PlaySound",
+    "PlaySound_Strict",
+    "FreeEntity",
+    "PositionEntity",
+    "ResetEntity",
+    "ShowEntity",
     "AASetFont",
 ];
 

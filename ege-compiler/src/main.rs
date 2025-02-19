@@ -5,9 +5,9 @@ use std::time::SystemTime;
 use clap::Parser;
 
 mod codegen;
-mod semantical;
 mod lexer;
 mod parser;
+mod semantical;
 
 #[derive(Debug, clap::Parser)]
 #[command(version, about, long_about = None)]
@@ -48,7 +48,10 @@ fn main() {
     let file = match std::fs::File::open(&args.path) {
         Ok(v) => v,
         Err(err) => {
-            error!("{}: could not open file: {err}", args.path.to_string_lossy());
+            error!(
+                "{}: could not open file: {err}",
+                args.path.to_string_lossy()
+            );
             std::process::exit(1);
         }
     };
@@ -82,7 +85,6 @@ fn main() {
         }
     };
 
-
     if args.json_dump {
         let content = serde_json::to_string_pretty(&analyzed_program).unwrap();
 
@@ -100,4 +102,3 @@ fn main() {
         duration.as_secs_f32()
     );
 }
-

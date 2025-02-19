@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
+use analyze::TypedGenerator;
 use anyhow::bail;
+use expr::{TypedExpr, TypedExprValue};
 use serde::Serialize;
 use statement::TypedStatement;
 
@@ -99,5 +101,22 @@ impl From<Option<IdentTyping>> for Typing {
             IdentTyping::Integer => Typing::Integer,
             IdentTyping::Type(struct_name) => Typing::Struct(struct_name),
         }
+    }
+}
+
+impl TypedGenerator for &Constant {
+    type TypedOutput = TypedExpr;
+
+    fn generate_typed(
+        self,
+        _: &mut AnalyzedProgram,
+        _: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        Ok(match self {
+            Constant::Float(v) => TypedExpr::new_float(TypedExprValue::Float(*v)),
+            Constant::Int(v) => TypedExpr::new_int(TypedExprValue::Integer(*v)),
+            Constant::String(v) => TypedExpr::new_string(TypedExprValue::String(v.clone())),
+            Constant::Null => TypedExpr::new_null(),
+        })
     }
 }

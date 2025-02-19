@@ -18,13 +18,17 @@ pub struct Ident {
 
 impl Ident {
     pub fn from_token(token: Token) -> Result<Self> {
-
         expect_token_type(&token, TokenTypeId::Ident)?;
 
         let v = token.content;
-        let TokenType::Ident(ident_type) = token.token_type else { unreachable!() };
+        let TokenType::Ident(ident_type) = token.token_type else {
+            unreachable!()
+        };
 
-        Ok(Ident { name: v, ident_type })
+        Ok(Ident {
+            name: v,
+            ident_type,
+        })
     }
 }
 
