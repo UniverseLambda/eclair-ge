@@ -21,6 +21,7 @@ pub struct AnalyzedProgram {
     pub global_vars: HashMap<String, VarInfo>,
 
     pub builtin_constants: HashMap<String, Constant>,
+    pub builtin_functions: HashMap<String, FunctionInfo>,
 
     pub statements: Vec<TypedStatement>,
 }
@@ -68,8 +69,7 @@ impl StructInfo {
 pub struct FunctionInfo {
     pub name: String,
     pub return_type: Typing,
-    pub args: HashMap<String, ArgInfo>,
-    pub args_order: Vec<String>,
+    pub args: Vec<ArgInfo>,
     pub vars: HashMap<String, VarInfo>,
     pub statements: Vec<TypedStatement>,
 

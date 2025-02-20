@@ -8,9 +8,38 @@ use crate::parser::{
 };
 
 use super::{
-    statement::TypedStatement, AnalyzedProgram, ArgInfo, Constant, ForScope, FunctionInfo,
-    StructInfo, Typing, VarInfo,
+    AnalyzedProgram, ArgInfo, Constant, ForScope, FunctionInfo, StructInfo, Typing, VarInfo,
 };
+
+macro_rules! insert_function_info {
+    ($map:ident, $value:expr) => {{
+        let res = $value;
+
+        $map.insert(res.name.clone(), res);
+    }};
+}
+
+macro_rules! builtin_function {
+    (fn $name:ident($($arg:ident: $arg_type:ident $(= $default_value:expr)?),*) -> $ret_type:ident) => {{
+        FunctionInfo {
+            name: stringify!($name).into(),
+            args: vec![$(
+                ArgInfo {
+                    var_info: VarInfo {
+                        name: stringify!($arg).into(),
+                        typing: Typing::$arg_type,
+                    },
+                    default_value: builtin_function!(@DEFAULT_VALUE@ $($default_value)? ),
+            }),*],
+            return_type: Typing::$ret_type,
+            phase0_checked: true,
+            statements: vec![],
+            vars: HashMap::new(),
+        }
+    }};
+    (@DEFAULT_VALUE@) => { None };
+    (@DEFAULT_VALUE@ $val:expr) => { Some($val) };
+}
 
 pub trait Analyzable {
     fn extract_declarations(
@@ -40,6 +69,7 @@ pub fn analyze_program(program: Program) -> anyhow::Result<AnalyzedProgram> {
         functions: HashMap::new(),
         global_vars: HashMap::new(),
         builtin_constants: HashMap::new(),
+        builtin_functions: builtin_functions(),
         statements: vec![],
     };
 
@@ -48,9 +78,54 @@ pub fn analyze_program(program: Program) -> anyhow::Result<AnalyzedProgram> {
     program.extract_declarations(&mut result, &mut None, None)?;
 
     debug!("sem: phase1: properly typing the code tree...");
-    debug!("sem: phase1: NOT IMPLEMENTED YET");
+
+    program.generate_typed(&mut result, &mut None, None)?;
 
     Ok(result)
+}
+
+fn builtin_functions() -> HashMap<String, FunctionInfo> {
+    let mut res = HashMap::new();
+
+    insert_function_info!(res, builtin_function!(fn AppTitle(title: String) -> Void));
+    insert_function_info!(
+        res,
+        builtin_function!(fn Graphics(width: Integer, height: Integer, depth: Integer, video_mode: Integer = Constant::Int(0)) -> Void)
+    );
+
+    insert_function_info!(
+        res,
+        builtin_function!(fn CreateTimer(time: Integer) -> Integer)
+    );
+
+    insert_function_info!(res, builtin_function!(fn CurrentTime() -> String));
+    insert_function_info!(
+        res,
+        builtin_function!(fn Left(source: String, len: Integer) -> String)
+    );
+    insert_function_info!(
+        res,
+        builtin_function!(fn Mid(source: String, offset: Integer, len: Integer) -> String)
+    );
+    insert_function_info!(
+        res,
+        builtin_function!(fn Right(source: String, len: Integer) -> String)
+    );
+
+    insert_function_info!(res, builtin_function!(fn Cls() -> Void));
+    insert_function_info!(
+        res,
+        builtin_function!(fn Color(red: Integer, blue: Integer, green: Integer) -> Void)
+    );
+
+    insert_function_info!(
+        res,
+        builtin_function!(fn Text(x: Integer, y: Integer, string: String, center_x: Integer = Constant::Int(0), center_y: Integer = Constant::Int(0)) -> Void)
+    );
+
+    insert_function_info!(res, builtin_function!(fn WaitTimer(timer: Integer) -> Void));
+
+    res
 }
 
 pub fn insert_local_variable(
@@ -90,7 +165,7 @@ pub fn insert_global_variable(
 pub fn insert_or_ignore_variable(
     program: &mut AnalyzedProgram,
     function: &mut Option<FunctionInfo>,
-    for_scope: Option<&ForScope>,
+    _: Option<&ForScope>,
     var_info: VarInfo,
 ) {
     if let Some(func) = function.as_mut() {
@@ -107,27 +182,55 @@ pub fn insert_or_ignore_variable(
 pub fn get_variable_type(
     program: &AnalyzedProgram,
     function: &Option<FunctionInfo>,
-    for_scope: Option<&ForScope>,
+    mut for_scope: Option<&ForScope>,
     var_name: &String,
 ) -> anyhow::Result<Typing> {
-    let var_info = if let Some(func) = function.as_ref() {
-        func.vars.get(var_name)
-    } else {
-        program.global_vars.get(var_name)
-    };
+    let mut var_type = None;
 
-    let Some(var_info) = var_info else {
+    while let Some(current) = for_scope {
+        if &current.var_name == var_name {
+            var_type = Some(current.var_type.clone());
+
+            break;
+        }
+
+        for_scope = current.previous;
+    }
+
+    if var_type.is_none() {
+        var_type = function
+            .as_ref()
+            .and_then(|v| {
+                v.vars.get(var_name).or_else(|| {
+                    v.args
+                        .iter()
+                        .find(|v| &v.var_info.name == var_name)
+                        .map(|v| &v.var_info)
+                })
+            })
+            .map(|v| v.typing.clone());
+    }
+
+    if var_type.is_none() {
+        var_type = program.global_vars.get(var_name).map(|v| v.typing.clone());
+    }
+
+    let Some(var_type) = var_type else {
         bail!("undefined variable: {var_name}");
     };
 
-    Ok(var_info.typing.clone())
+    Ok(var_type)
 }
 
 pub fn get_function_return_type(
     program: &AnalyzedProgram,
     func_name: &String,
 ) -> anyhow::Result<Typing> {
-    let Some(func) = program.functions.get(func_name) else {
+    let Some(func) = program
+        .functions
+        .get(func_name)
+        .or_else(|| program.builtin_functions.get(func_name))
+    else {
         bail!("undefined function: {func_name}");
     };
 
@@ -138,15 +241,15 @@ pub fn get_function_args_info(
     program: &AnalyzedProgram,
     func_name: &String,
 ) -> anyhow::Result<Vec<ArgInfo>> {
-    let Some(func) = program.functions.get(func_name) else {
+    let Some(func) = program
+        .functions
+        .get(func_name)
+        .or_else(|| program.builtin_functions.get(func_name))
+    else {
         bail!("undefined function: {func_name}");
     };
 
-    Ok(func
-        .args_order
-        .iter()
-        .map(|v| func.args.get(v).unwrap().clone())
-        .collect())
+    Ok(func.args.clone())
 }
 
 pub fn expect_typing(got: &Typing, expected: &Typing) -> anyhow::Result<()> {
@@ -170,7 +273,7 @@ impl Analyzable for Program {
 }
 
 impl TypedGenerator for Program {
-    type TypedOutput = Vec<TypedStatement>;
+    type TypedOutput = ();
 
     fn generate_typed(
         self,
@@ -178,9 +281,12 @@ impl TypedGenerator for Program {
         function: &mut Option<FunctionInfo>,
         for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
-        self.statements
+        program.statements = self
+            .statements
             .generate_typed(program, function, for_scope)
-            .map(|v| v.concat())
+            .map(|v| v.concat())?;
+
+        Ok(())
     }
 }
 
@@ -254,7 +360,7 @@ impl Analyzable for PackedDecl {
         &self,
         program: &mut AnalyzedProgram,
         _: &mut Option<FunctionInfo>,
-        for_scope: Option<&ForScope>,
+        _: Option<&ForScope>,
     ) -> anyhow::Result<()> {
         let info = StructInfo {
             name: self.name.name.clone(),
@@ -305,8 +411,7 @@ impl Analyzable for FunctionDecl {
         _: &mut Option<FunctionInfo>,
         for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
-        let mut args = HashMap::new();
-        let mut args_order = vec![];
+        let mut args = Vec::new();
 
         for (name, default_value) in self.params.iter().cloned() {
             let var_info = VarInfo {
@@ -320,21 +425,16 @@ impl Analyzable for FunctionDecl {
                 None
             };
 
-            args_order.push(var_info.name.clone());
-            args.insert(
-                var_info.name.clone(),
-                ArgInfo {
-                    var_info,
-                    default_value,
-                },
-            );
+            args.push(ArgInfo {
+                var_info,
+                default_value,
+            });
         }
 
         let mut func_info = Some(FunctionInfo {
             name: self.ident.name.clone(),
             return_type: self.ident.ident_type.clone().into(),
             args,
-            args_order,
             vars: HashMap::new(),
             phase0_checked: false,
             statements: vec![],
@@ -361,7 +461,8 @@ impl Analyzable for Select {
         function: &mut Option<FunctionInfo>,
         for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
-        self.cases.extract_declarations(program, function, for_scope)
+        self.cases
+            .extract_declarations(program, function, for_scope)
     }
 }
 

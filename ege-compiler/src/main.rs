@@ -1,4 +1,4 @@
-use log::{debug, error, info, Level};
+use log::{Level, debug, error, info};
 use semantical::analyze_program;
 use std::time::SystemTime;
 
@@ -81,6 +81,8 @@ fn main() {
         Ok(v) => v,
         Err(err) => {
             error!("{}: {}", args.path.to_string_lossy(), err.root_cause());
+            debug!("BACKTRACE:");
+            debug!("{}", err.backtrace());
             std::process::exit(1);
         }
     };

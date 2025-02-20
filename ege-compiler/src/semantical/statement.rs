@@ -3,14 +3,14 @@ use either::Either;
 use serde::Serialize;
 
 use crate::parser::{
-    ArrayDecl, ForLoop, ForLoopMode, FunctionDecl, If, InsertPivot, InsertRelPos, Otherwise,
-    Statement, VarAssign,
+    ArrayDecl, ForLoop, ForLoopMode, FunctionDecl, If, Insert, InsertPivot, InsertRelPos,
+    NoDataStatement, Otherwise, RepeatLoop, Return, Select, Statement, VarAssign,
 };
 
 use super::{
+    AnalyzedProgram, ForScope, FunctionInfo, Typing,
     analyze::{Analyzable, TypedGenerator},
     expr::{FieldAccess, TypedExpr, TypedExprValue, TypedFunctionCall, VarAccess},
-    AnalyzedProgram, ForScope, FunctionInfo, Typing,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -37,7 +37,7 @@ pub enum TypedStatementInner {
     ForRange(TypedForRange),
     ForEach(TypedForEach),
     Repeat(TypedRepeatLoop),
-    Insert(Insert),
+    Insert(TypedInsert),
     Exit,
     Select(TypedSelect),
     Return(TypedReturn),
@@ -88,7 +88,7 @@ pub struct TypedRepeatLoop {
 // Insert <source> <rel_pos> <pivot> <collection>
 
 #[derive(Debug, Clone, Serialize)]
-pub struct Insert {
+pub struct TypedInsert {
     pub source_name: String,
     pub rel_pos: InsertRelPos,
     pub pivot: InsertPivot,
@@ -190,14 +190,30 @@ impl TypedGenerator for Statement {
             Statement::If(if_statement) => if_statement
                 .generate_typed(program, function, for_scope)
                 .map(|v| vec![v]),
-            Statement::For(for_loop) => for_loop.generate_typed(program, function, for_scope).map(|v| vec![v]),
+            Statement::For(for_loop) => for_loop
+                .generate_typed(program, function, for_scope)
+                .map(|v| vec![v]),
             Statement::PackedDecl(_) => Ok(vec![]),
-            Statement::Repeat(repeat_loop) => todo!(),
-            Statement::Insert(insert) => todo!(),
-            Statement::NoData(no_data_statement) => todo!(),
-            Statement::Include(include) => todo!(),
-            Statement::Select(select) => todo!(),
-            Statement::Return(_) => todo!(),
+            Statement::Repeat(repeat_loop) => repeat_loop
+                .generate_typed(program, function, for_scope)
+                .map(|v| vec![v]),
+            Statement::Insert(insert) => insert
+                .generate_typed(program, function, for_scope)
+                .map(|v| vec![v]),
+            Statement::NoData(NoDataStatement::Exit) => {
+                Ok(vec![TypedStatement::new_void(TypedStatementInner::Exit)])
+            }
+            Statement::Include(include) => include
+                .program
+                .statements
+                .generate_typed(program, function, for_scope)
+                .map(|v| v.concat()),
+            Statement::Select(select) => select
+                .generate_typed(program, function, for_scope)
+                .map(|v| vec![TypedStatement::new_void(TypedStatementInner::Select(v))]),
+            Statement::Return(ret) => ret
+                .generate_typed(program, function, for_scope)
+                .map(|v| vec![TypedStatement::new_void(TypedStatementInner::Return(v))]),
         }
     }
 }
@@ -212,7 +228,11 @@ impl TypedGenerator for FunctionDecl {
         for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         if let Some(func) = function {
-            bail!("function declaration (here `{}`) inside another function (here `{}`) is not allowed", self.ident.name, func.name);
+            bail!(
+                "function declaration (here `{}`) inside another function (here `{}`) is not allowed",
+                self.ident.name,
+                func.name
+            );
         }
 
         let mut statements = vec![];
@@ -361,15 +381,20 @@ impl TypedGenerator for ForLoop {
         for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         Ok(TypedStatement::new_void(match self.mode {
-            ForLoopMode::Range { from, to } => TypedStatementInner::ForRange(TypedForRange {
-                name: self.name.name,
-                statements: self
-                    .statements
-                    .generate_typed(program, function, for_scope)?
-                    .concat(),
-                from: from.generate_typed(program, function, for_scope)?,
-                to: to.generate_typed(program, function, for_scope)?,
-            }),
+            ForLoopMode::Range { from, to } => {
+                // TODO: warn when iterator.ident_type is not None
+                let for_scope = ForScope::new(self.name.name.clone(), Typing::Integer, for_scope);
+
+                TypedStatementInner::ForRange(TypedForRange {
+                    name: self.name.name,
+                    statements: self
+                        .statements
+                        .generate_typed(program, function, Some(&for_scope))?
+                        .concat(),
+                    from: from.generate_typed(program, function, Some(&for_scope))?,
+                    to: to.generate_typed(program, function, Some(&for_scope))?,
+                })
+            }
             ForLoopMode::Each { iterator } => {
                 // TODO: warn when iterator.ident_type is not None
                 let struct_typing = program.get_struct_info(&iterator.name)?.as_type();
@@ -385,5 +410,114 @@ impl TypedGenerator for ForLoop {
                 })
             }
         }))
+    }
+}
+
+impl TypedGenerator for RepeatLoop {
+    type TypedOutput = TypedStatement;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        Ok(TypedStatement::new_void(TypedStatementInner::Repeat(
+            TypedRepeatLoop {
+                statements: self
+                    .statements
+                    .generate_typed(program, function, for_scope)?
+                    .concat(),
+            },
+        )))
+    }
+}
+
+impl TypedGenerator for Insert {
+    type TypedOutput = TypedStatement;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        _: &mut Option<FunctionInfo>,
+        _: Option<&ForScope>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        let typing = program.get_struct_info(&self.collection.name)?.as_type();
+        let collection_typing = Typing::from(self.collection.ident_type);
+
+        if typing != collection_typing {
+            bail!("trying to insert a {typing:?} in a collection of {collection_typing:?}");
+        }
+
+        Ok(TypedStatement::new_void(TypedStatementInner::Insert(
+            TypedInsert {
+                source_name: self.source.name,
+                rel_pos: self.rel_pos,
+                pivot: self.pivot,
+                collection: self.collection.name,
+            },
+        )))
+    }
+}
+
+impl TypedGenerator for Select {
+    type TypedOutput = TypedSelect;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        Ok(TypedSelect {
+            value: self.value.generate_typed(program, function, for_scope)?,
+            cases: self
+                .cases
+                .into_iter()
+                .map(|v| {
+                    Ok(TypedSelectCase {
+                        values: v
+                            .values
+                            .into_iter()
+                            .map(|v| v.generate_typed(program, function, for_scope))
+                            .collect::<anyhow::Result<Vec<TypedExpr>>>()?,
+                        statements: v
+                            .statements
+                            .generate_typed(program, function, for_scope)?
+                            .concat(),
+                    })
+                })
+                .collect::<anyhow::Result<Vec<TypedSelectCase>>>()?,
+            default_case: self
+                .default_case
+                .map(|v| {
+                    v.generate_typed(program, function, for_scope)
+                        .map(|v| v.concat())
+                })
+                .transpose()?,
+        })
+    }
+}
+
+impl TypedGenerator for Return {
+    type TypedOutput = TypedReturn;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        let typed_expr = self
+            .value
+            .map(|v| v.generate_typed(program, function, for_scope))
+            .transpose()?;
+
+        Ok(TypedReturn {
+            output_type: typed_expr
+                .as_ref()
+                .map_or(Typing::Void, |v| v.output_type.clone()),
+            value: typed_expr,
+        })
     }
 }
