@@ -27,7 +27,15 @@ pub struct AnalyzedProgram {
 
 impl AnalyzedProgram {
     pub fn get_struct_info(&self, name: &String) -> anyhow::Result<&StructInfo> {
-        self.structs.get(name).ok_or_else(|| anyhow!("undefined Type `{name}`"))
+        self.structs
+            .get(name)
+            .ok_or_else(|| anyhow!("undefined Type `{name}`"))
+    }
+
+    pub fn get_function_info_mut(&mut self, name: &String) -> anyhow::Result<&mut FunctionInfo> {
+        self.functions
+            .get_mut(name)
+            .ok_or_else(|| anyhow!("undefined function `{name}`"))
     }
 }
 
@@ -39,7 +47,16 @@ pub struct StructInfo {
 
 impl StructInfo {
     pub fn field_type(&self, field_name: &str) -> anyhow::Result<Typing> {
-        self.fields.iter().find_map(|v| if v.name == field_name { Some(v.typing.clone()) } else { None }).ok_or_else(|| anyhow!("no field named `{}` in Type `{}`", field_name, self.name))
+        self.fields
+            .iter()
+            .find_map(|v| {
+                if v.name == field_name {
+                    Some(v.typing.clone())
+                } else {
+                    None
+                }
+            })
+            .ok_or_else(|| anyhow!("no field named `{}` in Type `{}`", field_name, self.name))
     }
 
     pub fn as_type(&self) -> Typing {
@@ -58,7 +75,6 @@ pub struct FunctionInfo {
 
     pub phase0_checked: bool,
 }
-
 
 #[derive(Clone, Debug, Serialize)]
 pub struct VarInfo {

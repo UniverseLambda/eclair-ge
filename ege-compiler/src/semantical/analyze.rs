@@ -239,18 +239,6 @@ impl Analyzable for VarAssign {
     }
 }
 
-impl TypedGenerator for VarAssign {
-    type TypedOutput = TypedVarAssign;
-
-    fn generate_typed(
-        self,
-        program: &mut AnalyzedProgram,
-        function: &mut Option<FunctionInfo>,
-    ) -> anyhow::Result<Self::TypedOutput> {
-        todo!()
-    }
-}
-
 impl Analyzable for PackedDecl {
     fn extract_declarations(
         &self,

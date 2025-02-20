@@ -1,10 +1,12 @@
+use anyhow::bail;
+use either::Either;
 use serde::Serialize;
 
-use crate::parser::{FunctionDecl, InsertPivot, InsertRelPos, Statement};
+use crate::parser::{FunctionDecl, InsertPivot, InsertRelPos, Statement, VarAssign};
 
 use super::{
     analyze::{Analyzable, TypedGenerator},
-    expr::{TypedExpr, TypedFunctionCall},
+    expr::{FieldAccess, TypedExpr, TypedExprValue, TypedFunctionCall, VarAccess},
     AnalyzedProgram, FunctionInfo, Typing,
 };
 
@@ -12,6 +14,15 @@ use super::{
 pub struct TypedStatement {
     pub output_value: Typing,
     pub inner: TypedStatementInner,
+}
+
+impl TypedStatement {
+    pub fn new_void(inner: TypedStatementInner) -> Self {
+        Self {
+            output_value: Typing::Void,
+            inner,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -30,7 +41,7 @@ pub enum TypedStatementInner {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct TypedVarAssign {
-    pub var_name: String,
+    pub var_expr: Either<VarAccess, FieldAccess>,
     pub var_type: Typing,
     pub value: TypedExpr,
 }
@@ -146,9 +157,17 @@ impl TypedGenerator for Statement {
         function: &mut Option<FunctionInfo>,
     ) -> anyhow::Result<Self::TypedOutput> {
         match self {
-            Statement::FunctionDecl(function_decl) => todo!(),
-            Statement::FunctionCall(function_call) => todo!(),
-            Statement::VarAssign(var_assign) => todo!(),
+            Statement::FunctionDecl(function_decl) => {
+                function_decl.generate_typed(program, function)
+            }
+            Statement::FunctionCall(function_call) => {
+                function_call.generate_typed(program, function).map(|v| {
+                    vec![TypedStatement::new_void(TypedStatementInner::FunctionCall(
+                        v,
+                    ))]
+                })
+            }
+            Statement::VarAssign(var_assign) => var_assign.generate_typed(program, function),
             Statement::ArrayDecl(array_decls) => todo!(),
             Statement::If(_) => todo!(),
             Statement::For(for_loop) => todo!(),
@@ -163,14 +182,79 @@ impl TypedGenerator for Statement {
     }
 }
 
-// impl TypedGenerator for FunctionDecl {
-//     type TypedOutput = Vec<TypedStatement>;
+impl TypedGenerator for FunctionDecl {
+    type TypedOutput = Vec<TypedStatement>;
 
-//     fn generate_typed(
-//         self,
-//         program: &mut AnalyzedProgram,
-//         function: &mut Option<FunctionInfo>,
-//     ) -> anyhow::Result<Self::TypedOutput> {
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        if let Some(func) = function {
+            bail!("function declaration (here `{}`) inside another function (here `{}`) is not allowed", self.ident.name, func.name);
+        }
 
-//     }
-// }
+        let mut statements = vec![];
+        // We can throw out this one as it should not be modified
+        let mut function = Some(program.get_function_info_mut(&self.ident.name)?.clone());
+        // TODO: think about adding check to see if this value is different from the one stored.
+
+        for statement in self.statements {
+            let gen_statements = statement.generate_typed(program, &mut function)?;
+
+            statements.extend(gen_statements.into_iter());
+        }
+
+        // TODO: think about adding check to see if statements is empty or not
+        program
+            .get_function_info_mut(&self.ident.name)
+            .unwrap()
+            .statements = statements;
+
+        Ok(vec![])
+    }
+}
+
+impl TypedGenerator for VarAssign {
+    type TypedOutput = Vec<TypedStatement>;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        let mut res = vec![];
+
+        // TODO: think about validating scope?
+
+        for (name, value) in self
+            .defs
+            .into_iter()
+            .filter_map(|(ident_path, v)| v.map(|v| (ident_path, v)))
+        {
+            let (var_expr, var_type) = match name.generate_typed(program, function)?.value {
+                TypedExprValue::VariableAccess(var_access) => {
+                    let typing = var_access.var_type.clone();
+
+                    (Either::Left(var_access), typing)
+                }
+                TypedExprValue::FieldAccess(field_access) => {
+                    let typing = field_access.field_type.clone();
+
+                    (Either::Right(field_access), typing)
+                }
+                _ => unreachable!(),
+            };
+
+            res.push(TypedStatement::new_void(TypedStatementInner::VarAssign(
+                TypedVarAssign {
+                    var_expr,
+                    var_type: var_type.clone(),
+                    value: value.generate_typed(program, function)?.cast_to(var_type)?,
+                },
+            )));
+        }
+
+        Ok(res)
+    }
+}

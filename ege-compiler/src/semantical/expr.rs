@@ -312,9 +312,11 @@ impl TypedGenerator for Expr {
             Expr::Unary(unary_expr) => {
                 let value = Box::new(unary_expr.value.generate_typed(pgm, func)?);
 
-                Ok(TypedExpr { output_type: value.output_type.clone(), value: TypedExprValue::Unary(value, unary_expr.op) })
-
-            },
+                Ok(TypedExpr {
+                    output_type: value.output_type.clone(),
+                    value: TypedExprValue::Unary(value, unary_expr.op),
+                })
+            }
         }
     }
 }
