@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use analyze::TypedGenerator;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use expr::{TypedExpr, TypedExprValue};
 use serde::Serialize;
 use statement::TypedStatement;
@@ -25,10 +25,26 @@ pub struct AnalyzedProgram {
     pub statements: Vec<TypedStatement>,
 }
 
+impl AnalyzedProgram {
+    pub fn get_struct_info(&self, name: &String) -> anyhow::Result<&StructInfo> {
+        self.structs.get(name).ok_or_else(|| anyhow!("undefined Type `{name}`"))
+    }
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct StructInfo {
     pub name: String,
     pub fields: Vec<VarInfo>,
+}
+
+impl StructInfo {
+    pub fn field_type(&self, field_name: &str) -> anyhow::Result<Typing> {
+        self.fields.iter().find_map(|v| if v.name == field_name { Some(v.typing.clone()) } else { None }).ok_or_else(|| anyhow!("no field named `{}` in Type `{}`", field_name, self.name))
+    }
+
+    pub fn as_type(&self) -> Typing {
+        Typing::Struct(self.name.clone())
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -42,6 +58,7 @@ pub struct FunctionInfo {
 
     pub phase0_checked: bool,
 }
+
 
 #[derive(Clone, Debug, Serialize)]
 pub struct VarInfo {

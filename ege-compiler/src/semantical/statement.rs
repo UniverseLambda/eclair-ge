@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::parser::{InsertPivot, InsertRelPos, Statement};
+use crate::parser::{FunctionDecl, InsertPivot, InsertRelPos, Statement};
 
 use super::{
     analyze::{Analyzable, TypedGenerator},
@@ -145,6 +145,32 @@ impl TypedGenerator for Statement {
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
     ) -> anyhow::Result<Self::TypedOutput> {
-        todo!()
+        match self {
+            Statement::FunctionDecl(function_decl) => todo!(),
+            Statement::FunctionCall(function_call) => todo!(),
+            Statement::VarAssign(var_assign) => todo!(),
+            Statement::ArrayDecl(array_decls) => todo!(),
+            Statement::If(_) => todo!(),
+            Statement::For(for_loop) => todo!(),
+            Statement::Repeat(repeat_loop) => todo!(),
+            Statement::PackedDecl(packed_decl) => todo!(),
+            Statement::Insert(insert) => todo!(),
+            Statement::NoData(no_data_statement) => todo!(),
+            Statement::Include(include) => todo!(),
+            Statement::Select(select) => todo!(),
+            Statement::Return(_) => todo!(),
+        }
     }
 }
+
+// impl TypedGenerator for FunctionDecl {
+//     type TypedOutput = Vec<TypedStatement>;
+
+//     fn generate_typed(
+//         self,
+//         program: &mut AnalyzedProgram,
+//         function: &mut Option<FunctionInfo>,
+//     ) -> anyhow::Result<Self::TypedOutput> {
+
+//     }
+// }

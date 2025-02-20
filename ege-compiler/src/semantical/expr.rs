@@ -1,7 +1,11 @@
 use anyhow::bail;
+use log::warn;
 use serde::Serialize;
 
-use crate::parser::{BinaryExpr, BinaryExprOp, Expr, FunctionCall, UnaryExprOp};
+use crate::{
+    parser::{BinaryExpr, BinaryExprOp, Expr, FunctionCall, IdentPath, UnaryExprOp},
+    semantical::analyze::get_variable_type,
+};
 
 use super::{
     analyze::{expect_typing, get_function_args_info, get_function_return_type, TypedGenerator},
@@ -15,6 +19,10 @@ pub struct TypedExpr {
 }
 
 impl TypedExpr {
+    pub fn new(output_type: Typing, value: TypedExprValue) -> Self {
+        Self { output_type, value }
+    }
+
     // FIXME: new_*: always check the type of value
     pub fn new_int(value: TypedExprValue) -> Self {
         Self {
@@ -102,7 +110,7 @@ impl TypedExpr {
             Typing::Float => TypedExpr::new_float_to_int(self),
             Typing::String => TypedExpr::new_string_to_int(self),
             Typing::Void => unreachable!(),
-            v => bail!("cannot cast {v:?} to Int (expected Float or String)")
+            v => bail!("cannot cast {v:?} to Int (expected Float or String)"),
         }
     }
 
@@ -112,7 +120,7 @@ impl TypedExpr {
             Typing::Float => Ok(self),
             Typing::String => TypedExpr::new_string_to_float(self),
             Typing::Void => unreachable!(),
-            v => bail!("cannot cast {v:?} to Float (expected Int or String)")
+            v => bail!("cannot cast {v:?} to Float (expected Int or String)"),
         }
     }
 
@@ -122,7 +130,7 @@ impl TypedExpr {
             Typing::Float => TypedExpr::new_float_to_string(self),
             Typing::String => Ok(self),
             Typing::Void => unreachable!(),
-            v => bail!("cannot cast {v:?} to Float (expected Int or Float)")
+            v => bail!("cannot cast {v:?} to Float (expected Int or Float)"),
         }
     }
 }
@@ -139,7 +147,7 @@ pub enum TypedExprValue {
     FieldAccess(FieldAccess),
     CollectionAcces(CollectionAccess),
     AllocStruct(AllocStruct),
-    Unary(UnaryExprOp),
+    Unary(Box<TypedExpr>, UnaryExprOp),
 
     // Internals only
     ConcatStr(Box<TypedExpr>, Box<TypedExpr>),
@@ -257,27 +265,56 @@ impl TypedGenerator for Expr {
                 gen_typed!(function_call(pgm, func), FunctionCall, output_type)
             }
             Expr::Binary(binary_expr) => binary_expr.generate_typed(pgm, func),
-            Expr::Path(ident_path) => todo!(),
+            Expr::Path(ident_path) => ident_path.generate_typed(pgm, func),
             Expr::CollectionFirst(ident) => {
                 // FIXME: Check whether or not the type exists.
                 let typing = Typing::from(ident.ident_type);
 
                 Ok(TypedExpr {
                     output_type: typing.clone(),
-                    value: TypedExprValue::CollectionAcces(CollectionAccess { struct_name: ident.name, last: false, output_type: typing }),
+                    value: TypedExprValue::CollectionAcces(CollectionAccess {
+                        struct_name: ident.name,
+                        last: false,
+                        output_type: typing,
+                    }),
                 })
-            },
+            }
             Expr::CollectionLast(ident) => {
                 // FIXME: Check whether or not the type exists.
                 let typing = Typing::from(ident.ident_type);
 
                 Ok(TypedExpr {
                     output_type: typing.clone(),
-                    value: TypedExprValue::CollectionAcces(CollectionAccess { struct_name: ident.name, last: true, output_type: typing }),
+                    value: TypedExprValue::CollectionAcces(CollectionAccess {
+                        struct_name: ident.name,
+                        last: true,
+                        output_type: typing,
+                    }),
                 })
+            }
+            Expr::New(ident) => {
+                // FIXME: Check whether or not the type exists.
+                let typing = Typing::from(ident.ident_type);
+
+                let struct_name = match typing {
+                    Typing::Struct(ref v) => v,
+                    v => bail!("expected Type, but got {v:?}"),
+                };
+
+                Ok(TypedExpr {
+                    output_type: Typing::Struct(struct_name.clone()),
+                    value: TypedExprValue::AllocStruct(AllocStruct {
+                        struct_name: struct_name.clone(),
+                        output_type: typing,
+                    }),
+                })
+            }
+            Expr::Unary(unary_expr) => {
+                let value = Box::new(unary_expr.value.generate_typed(pgm, func)?);
+
+                Ok(TypedExpr { output_type: value.output_type.clone(), value: TypedExprValue::Unary(value, unary_expr.op) })
+
             },
-            Expr::New(ident) => todo!(),
-            Expr::Unary(unary_expr) => todo!(),
         }
     }
 }
@@ -341,10 +378,13 @@ impl TypedGenerator for BinaryExpr {
                 Typing::Integer => TypedExprValue::ConcatInt(Box::new(left), Box::new(right)),
                 Typing::Float => TypedExprValue::ConcatFloat(Box::new(left), Box::new(right)),
                 Typing::String => TypedExprValue::ConcatStr(Box::new(left), Box::new(right)),
-                v => bail!("Cannot concat {v:?} to a string (expected Int, Float or String)")
+                v => bail!("cannot concat {v:?} to a string (expected Int, Float or String)"),
             };
 
-            Ok(TypedExpr { output_type: Typing::String, value: res })
+            Ok(TypedExpr {
+                output_type: Typing::String,
+                value: res,
+            })
         } else {
             let (left, right) = TypedBinaryExpr::numeric_insert_cast(left, right)?;
 
@@ -355,7 +395,59 @@ impl TypedGenerator for BinaryExpr {
                 op,
             };
 
-            Ok(TypedExpr { output_type: value.output_type.clone(), value: TypedExprValue::Binary(value) })
+            Ok(TypedExpr {
+                output_type: value.output_type.clone(),
+                value: TypedExprValue::Binary(value),
+            })
         }
+    }
+}
+
+impl TypedGenerator for IdentPath {
+    type TypedOutput = TypedExpr;
+
+    fn generate_typed(
+        mut self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        let root_component = self.components.remove(0);
+        let root_struct = get_variable_type(program, function, &root_component)?;
+        let mut expr = TypedExpr::new(
+            root_struct.clone(),
+            TypedExprValue::VariableAccess(VarAccess {
+                var_name: root_component,
+                var_type: root_struct,
+            }),
+        );
+
+        for field_name in self.components.drain(..) {
+            let parent_struct_name = match expr.output_type {
+                Typing::Struct(ref v) => v,
+                v => bail!("expected Type, but got {v:?}"),
+            };
+
+            let parent_struct = program.get_struct_info(parent_struct_name)?;
+            let field_type = parent_struct.field_type(&field_name)?;
+
+            expr = TypedExpr::new(
+                field_type.clone(),
+                TypedExprValue::FieldAccess(FieldAccess {
+                    parent: Box::new(expr),
+                    field_name,
+                    field_type,
+                }),
+            )
+        }
+
+        let final_type = Typing::from(self.final_type);
+        if final_type != expr.output_type {
+            warn!(
+                "ident path typed as {:?}, but type analysis returned {final_type:?}",
+                expr.output_type
+            );
+        }
+
+        Ok(expr)
     }
 }
