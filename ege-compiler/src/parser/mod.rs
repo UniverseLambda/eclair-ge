@@ -2,10 +2,10 @@ use std::io::Read;
 
 use anyhow::{bail, Context, Ok, Result};
 pub use ast_type::{
-    ArrayDecl, ArrayDecls, BinaryExpr, BinaryExprOp, Expr, ForLoop, FunctionCall, FunctionDecl,
-    IdentPath, If, Include, Insert, InsertPivot, InsertRelPos, NoDataStatement, PackedDecl,
-    Parsable, Program, RepeatLoop, Return, Select, SelectCase, Statement, UnaryExprOp, VarAssign,
-    VarScope,
+    ArrayDecl, ArrayDecls, BinaryExpr, BinaryExprOp, Expr, ForLoop, ForLoopMode, FunctionCall,
+    FunctionDecl, IdentPath, If, Include, Insert, InsertPivot, InsertRelPos, NoDataStatement,
+    Otherwise, PackedDecl, Parsable, Program, RepeatLoop, Return, Select, SelectCase, Statement,
+    UnaryExprOp, VarAssign, VarScope,
 };
 use ext::TokenExt;
 use log::{debug, trace, warn};

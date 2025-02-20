@@ -8,8 +8,8 @@ use crate::parser::{
 };
 
 use super::{
-    statement::{TypedArrayDecl, TypedReturn, TypedSelect, TypedStatement, TypedVarAssign},
-    AnalyzedProgram, ArgInfo, Constant, FunctionInfo, StructInfo, Typing, VarInfo,
+    statement::TypedStatement, AnalyzedProgram, ArgInfo, Constant, ForScope, FunctionInfo,
+    StructInfo, Typing, VarInfo,
 };
 
 pub trait Analyzable {
@@ -17,6 +17,7 @@ pub trait Analyzable {
         &self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()>;
 }
 
@@ -27,6 +28,7 @@ pub trait TypedGenerator {
         self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput>;
 }
 
@@ -43,7 +45,7 @@ pub fn analyze_program(program: Program) -> anyhow::Result<AnalyzedProgram> {
 
     debug!("sem: phase0: extracting declarations...");
 
-    program.extract_declarations(&mut result, &mut None)?;
+    program.extract_declarations(&mut result, &mut None, None)?;
 
     debug!("sem: phase1: properly typing the code tree...");
     debug!("sem: phase1: NOT IMPLEMENTED YET");
@@ -88,6 +90,7 @@ pub fn insert_global_variable(
 pub fn insert_or_ignore_variable(
     program: &mut AnalyzedProgram,
     function: &mut Option<FunctionInfo>,
+    for_scope: Option<&ForScope>,
     var_info: VarInfo,
 ) {
     if let Some(func) = function.as_mut() {
@@ -104,6 +107,7 @@ pub fn insert_or_ignore_variable(
 pub fn get_variable_type(
     program: &AnalyzedProgram,
     function: &Option<FunctionInfo>,
+    for_scope: Option<&ForScope>,
     var_name: &String,
 ) -> anyhow::Result<Typing> {
     let var_info = if let Some(func) = function.as_ref() {
@@ -158,8 +162,10 @@ impl Analyzable for Program {
         &self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
-        self.statements.extract_declarations(program, function)
+        self.statements
+            .extract_declarations(program, function, for_scope)
     }
 }
 
@@ -170,9 +176,10 @@ impl TypedGenerator for Program {
         self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         self.statements
-            .generate_typed(program, function)
+            .generate_typed(program, function, for_scope)
             .map(|v| v.concat())
     }
 }
@@ -182,9 +189,10 @@ impl<T: Analyzable> Analyzable for Vec<T> {
         &self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
         for v in self.iter() {
-            v.extract_declarations(program, function)?;
+            v.extract_declarations(program, function, for_scope)?;
         }
 
         Ok(())
@@ -198,11 +206,12 @@ impl<T: TypedGenerator> TypedGenerator for Vec<T> {
         self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         let mut result = vec![];
 
         for elem in self {
-            result.push(elem.generate_typed(program, function)?);
+            result.push(elem.generate_typed(program, function, for_scope)?);
         }
 
         Ok(result)
@@ -214,6 +223,7 @@ impl Analyzable for VarAssign {
         &self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
         for (name, _) in self.defs.iter() {
             let var_info = VarInfo {
@@ -231,7 +241,7 @@ impl Analyzable for VarAssign {
                 Some(VarScope::Global) => insert_global_variable(program, var_info)?,
                 Some(VarScope::Local) => insert_local_variable(program, function, var_info)?,
                 None if name.components.len() > 1 => (),
-                None => insert_or_ignore_variable(program, function, var_info),
+                None => insert_or_ignore_variable(program, function, for_scope, var_info),
             }
         }
 
@@ -244,6 +254,7 @@ impl Analyzable for PackedDecl {
         &self,
         program: &mut AnalyzedProgram,
         _: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
         let info = StructInfo {
             name: self.name.name.clone(),
@@ -271,6 +282,7 @@ impl Analyzable for ArrayDecl {
         &self,
         program: &mut AnalyzedProgram,
         _: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
         let info = VarInfo {
             name: self.ident.name.clone(),
@@ -280,21 +292,9 @@ impl Analyzable for ArrayDecl {
             },
         };
 
-        insert_or_ignore_variable(program, &mut None, info);
+        insert_or_ignore_variable(program, &mut None, for_scope, info);
 
         Ok(())
-    }
-}
-
-impl TypedGenerator for ArrayDecl {
-    type TypedOutput = TypedArrayDecl;
-
-    fn generate_typed(
-        self,
-        program: &mut AnalyzedProgram,
-        function: &mut Option<FunctionInfo>,
-    ) -> anyhow::Result<Self::TypedOutput> {
-        todo!()
     }
 }
 
@@ -303,6 +303,7 @@ impl Analyzable for FunctionDecl {
         &self,
         program: &mut AnalyzedProgram,
         _: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
         let mut args = HashMap::new();
         let mut args_order = vec![];
@@ -340,7 +341,7 @@ impl Analyzable for FunctionDecl {
         });
 
         self.statements
-            .extract_declarations(program, &mut func_info)?;
+            .extract_declarations(program, &mut func_info, for_scope)?;
 
         if let Some(previous) = program
             .functions
@@ -358,20 +359,9 @@ impl Analyzable for Select {
         &self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
-        self.cases.extract_declarations(program, function)
-    }
-}
-
-impl TypedGenerator for Select {
-    type TypedOutput = TypedSelect;
-
-    fn generate_typed(
-        self,
-        program: &mut AnalyzedProgram,
-        function: &mut Option<FunctionInfo>,
-    ) -> anyhow::Result<Self::TypedOutput> {
-        todo!()
+        self.cases.extract_declarations(program, function, for_scope)
     }
 }
 
@@ -380,8 +370,10 @@ impl Analyzable for SelectCase {
         &self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
-        self.statements.extract_declarations(program, function)
+        self.statements
+            .extract_declarations(program, function, for_scope)
     }
 }
 
@@ -390,6 +382,7 @@ impl Analyzable for Return {
         &self,
         _: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        _: Option<&ForScope>,
     ) -> anyhow::Result<()> {
         let Some(function) = function else {
             bail!("Return statement outside of a function");
@@ -405,17 +398,5 @@ impl Analyzable for Return {
         function.phase0_checked = true;
 
         Ok(())
-    }
-}
-
-impl TypedGenerator for Return {
-    type TypedOutput = TypedReturn;
-
-    fn generate_typed(
-        self,
-        program: &mut AnalyzedProgram,
-        function: &mut Option<FunctionInfo>,
-    ) -> anyhow::Result<Self::TypedOutput> {
-        todo!()
     }
 }

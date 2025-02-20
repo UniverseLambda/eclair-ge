@@ -21,7 +21,7 @@ pub struct ForLoop {
 #[derive(Debug, Clone, Serialize)]
 pub enum ForLoopMode {
     Range { from: Expr, to: Expr },
-    Each { iterator: Expr },
+    Each { iterator: Ident },
 }
 
 impl Parsable for ForLoop {
@@ -48,7 +48,7 @@ impl Parsable for ForLoop {
             parser.required_next_token()?;
 
             ForLoopMode::Each {
-                iterator: Expr::parse(parser)?,
+                iterator: Ident::parse(parser)?,
             }
         } else {
             let initial_value = Expr::parse(parser)?;

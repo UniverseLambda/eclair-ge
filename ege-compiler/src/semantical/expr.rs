@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     analyze::{expect_typing, get_function_args_info, get_function_return_type, TypedGenerator},
-    AnalyzedProgram, FunctionInfo, Typing,
+    AnalyzedProgram, ForScope, FunctionInfo, Typing,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -238,8 +238,8 @@ pub struct AllocStruct {
 }
 
 macro_rules! gen_typed {
-    ($value:ident($program:ident,$func:ident), $target:ident, $typing_field:ident) => {{
-        let res = ($value).generate_typed($program, $func)?;
+    ($value:ident($program:ident,$func:ident, $for_scope:ident), $target:ident, $typing_field:ident) => {{
+        let res = ($value).generate_typed($program, $func, $for_scope)?;
 
         Ok(TypedExpr {
             output_type: res.$typing_field.clone(),
@@ -255,6 +255,7 @@ impl TypedGenerator for Expr {
         self,
         pgm: &mut AnalyzedProgram,
         func: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         match self {
             Expr::Integer(v) => Ok(TypedExpr::new_int(TypedExprValue::Integer(v))),
@@ -262,10 +263,14 @@ impl TypedGenerator for Expr {
             Expr::String(v) => Ok(TypedExpr::new_string(TypedExprValue::String(v))),
             Expr::Null => Ok(TypedExpr::new_null()),
             Expr::Function(function_call) => {
-                gen_typed!(function_call(pgm, func), FunctionCall, output_type)
+                gen_typed!(
+                    function_call(pgm, func, for_scope),
+                    FunctionCall,
+                    output_type
+                )
             }
-            Expr::Binary(binary_expr) => binary_expr.generate_typed(pgm, func),
-            Expr::Path(ident_path) => ident_path.generate_typed(pgm, func),
+            Expr::Binary(binary_expr) => binary_expr.generate_typed(pgm, func, for_scope),
+            Expr::Path(ident_path) => ident_path.generate_typed(pgm, func, for_scope),
             Expr::CollectionFirst(ident) => {
                 // FIXME: Check whether or not the type exists.
                 let typing = Typing::from(ident.ident_type);
@@ -310,7 +315,7 @@ impl TypedGenerator for Expr {
                 })
             }
             Expr::Unary(unary_expr) => {
-                let value = Box::new(unary_expr.value.generate_typed(pgm, func)?);
+                let value = Box::new(unary_expr.value.generate_typed(pgm, func, for_scope)?);
 
                 Ok(TypedExpr {
                     output_type: value.output_type.clone(),
@@ -328,12 +333,13 @@ impl TypedGenerator for FunctionCall {
         self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         // TODO: implement Array access
         // FIXME: generate an error or a warning when type from ident does not match the one from the registrar.
 
         let name = self.ident.name;
-        let mut params = self.params.generate_typed(program, function)?;
+        let mut params = self.params.generate_typed(program, function, for_scope)?;
         let func_in = get_function_args_info(program, &name)?;
         let func_out = get_function_return_type(program, &name)?;
 
@@ -351,7 +357,7 @@ impl TypedGenerator for FunctionCall {
                     bail!("missing argument in call to `{name}`: no default value for argument at index {idx}");
                 };
 
-                params.push(default_value.generate_typed(program, function)?);
+                params.push(default_value.generate_typed(program, function, for_scope)?);
             }
         }
 
@@ -370,9 +376,10 @@ impl TypedGenerator for BinaryExpr {
         self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
-        let left = self.left.generate_typed(program, function)?;
-        let right = self.right.generate_typed(program, function)?;
+        let left = self.left.generate_typed(program, function, for_scope)?;
+        let right = self.right.generate_typed(program, function, for_scope)?;
         let op = self.op;
 
         if left.output_type == Typing::String {
@@ -412,9 +419,10 @@ impl TypedGenerator for IdentPath {
         mut self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         let root_component = self.components.remove(0);
-        let root_struct = get_variable_type(program, function, &root_component)?;
+        let root_struct = get_variable_type(program, function, for_scope, &root_component)?;
         let mut expr = TypedExpr::new(
             root_struct.clone(),
             TypedExprValue::VariableAccess(VarAccess {

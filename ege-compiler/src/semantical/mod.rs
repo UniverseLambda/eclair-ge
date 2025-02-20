@@ -77,6 +77,23 @@ pub struct FunctionInfo {
 }
 
 #[derive(Clone, Debug, Serialize)]
+pub struct ForScope<'a> {
+    pub var_name: String,
+    pub var_type: Typing,
+    pub previous: Option<&'a ForScope<'a>>,
+}
+
+impl<'a> ForScope<'a> {
+    pub fn new(var_name: String, var_type: Typing, previous: Option<&'a ForScope<'a>>) -> Self {
+        Self {
+            var_name,
+            var_type,
+            previous,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
 pub struct VarInfo {
     pub name: String,
     pub typing: Typing,
@@ -144,6 +161,7 @@ impl TypedGenerator for &Constant {
         self,
         _: &mut AnalyzedProgram,
         _: &mut Option<FunctionInfo>,
+        _: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         Ok(match self {
             Constant::Float(v) => TypedExpr::new_float(TypedExprValue::Float(*v)),

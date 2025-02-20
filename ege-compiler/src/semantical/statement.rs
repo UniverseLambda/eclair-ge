@@ -2,12 +2,15 @@ use anyhow::bail;
 use either::Either;
 use serde::Serialize;
 
-use crate::parser::{FunctionDecl, InsertPivot, InsertRelPos, Statement, VarAssign};
+use crate::parser::{
+    ArrayDecl, ForLoop, ForLoopMode, FunctionDecl, If, InsertPivot, InsertRelPos, Otherwise,
+    Statement, VarAssign,
+};
 
 use super::{
     analyze::{Analyzable, TypedGenerator},
     expr::{FieldAccess, TypedExpr, TypedExprValue, TypedFunctionCall, VarAccess},
-    AnalyzedProgram, FunctionInfo, Typing,
+    AnalyzedProgram, ForScope, FunctionInfo, Typing,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -31,7 +34,8 @@ pub enum TypedStatementInner {
     VarAssign(TypedVarAssign),
     ArrayDecl(TypedArrayDecl),
     If(TypedIf),
-    For(TypedForLoop),
+    ForRange(TypedForRange),
+    ForEach(TypedForEach),
     Repeat(TypedRepeatLoop),
     Insert(Insert),
     Exit,
@@ -57,31 +61,23 @@ pub struct TypedArrayDecl {
 pub struct TypedIf {
     pub cond: TypedExpr,
     pub statements: Vec<TypedStatement>,
-    pub else_if: Vec<TypedOtherwise>,
+    pub else_ifs: Vec<(TypedExpr, Vec<TypedStatement>)>,
+    pub else_statements: Option<Vec<TypedStatement>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub enum TypedOtherwise {
-    ElseIf {
-        cond: TypedExpr,
-        statements: Vec<TypedStatement>,
-    },
-    Else {
-        statements: Vec<TypedStatement>,
-    },
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct TypedForLoop {
+pub struct TypedForEach {
     pub name: String,
     pub statements: Vec<TypedStatement>,
-    pub mode: TypedForLoopMode,
+    pub iterator: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub enum TypedForLoopMode {
-    Range { from: TypedExpr, to: TypedExpr },
-    Each { iterator: TypedExpr },
+pub struct TypedForRange {
+    pub name: String,
+    pub statements: Vec<TypedStatement>,
+    pub from: TypedExpr,
+    pub to: TypedExpr,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -123,26 +119,43 @@ impl Analyzable for Statement {
         &self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<()> {
         match self {
-            Statement::VarAssign(var_assign) => var_assign.extract_declarations(program, function),
-            Statement::If(if_decl) => if_decl.statements.extract_declarations(program, function),
-            Statement::PackedDecl(packed_decl) => {
-                packed_decl.extract_declarations(program, function)
+            Statement::VarAssign(var_assign) => {
+                var_assign.extract_declarations(program, function, for_scope)
             }
-            Statement::Include(include) => include.program.extract_declarations(program, function),
-            Statement::For(for_loop) => for_loop.statements.extract_declarations(program, function),
+            Statement::If(if_decl) => if_decl
+                .statements
+                .extract_declarations(program, function, for_scope),
+            Statement::PackedDecl(packed_decl) => {
+                packed_decl.extract_declarations(program, function, for_scope)
+            }
+            Statement::Include(include) => include
+                .program
+                .extract_declarations(program, function, for_scope),
+            Statement::For(for_loop) => {
+                let for_scope = ForScope::new(
+                    for_loop.name.name.clone(),
+                    for_loop.name.ident_type.clone().into(),
+                    for_scope,
+                );
+
+                for_loop
+                    .statements
+                    .extract_declarations(program, function, Some(&for_scope))
+            }
             Statement::Repeat(repeat_loop) => repeat_loop
                 .statements
-                .extract_declarations(program, function),
+                .extract_declarations(program, function, for_scope),
             Statement::ArrayDecl(array_decls) => {
-                array_decls.extract_declarations(program, function)
+                array_decls.extract_declarations(program, function, for_scope)
             }
             Statement::FunctionDecl(function_decl) => {
-                function_decl.extract_declarations(program, function)
+                function_decl.extract_declarations(program, function, for_scope)
             }
-            Statement::Select(select) => select.extract_declarations(program, function),
-            Statement::Return(ret) => ret.extract_declarations(program, function),
+            Statement::Select(select) => select.extract_declarations(program, function, for_scope),
+            Statement::Return(ret) => ret.extract_declarations(program, function, for_scope),
             Statement::Insert(_) | Statement::NoData(_) | Statement::FunctionCall(_) => Ok(()),
         }
     }
@@ -155,24 +168,31 @@ impl TypedGenerator for Statement {
         self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         match self {
             Statement::FunctionDecl(function_decl) => {
-                function_decl.generate_typed(program, function)
+                function_decl.generate_typed(program, function, for_scope)
             }
-            Statement::FunctionCall(function_call) => {
-                function_call.generate_typed(program, function).map(|v| {
+            Statement::FunctionCall(function_call) => function_call
+                .generate_typed(program, function, for_scope)
+                .map(|v| {
                     vec![TypedStatement::new_void(TypedStatementInner::FunctionCall(
                         v,
                     ))]
-                })
+                }),
+            Statement::VarAssign(var_assign) => {
+                var_assign.generate_typed(program, function, for_scope)
             }
-            Statement::VarAssign(var_assign) => var_assign.generate_typed(program, function),
-            Statement::ArrayDecl(array_decls) => todo!(),
-            Statement::If(_) => todo!(),
-            Statement::For(for_loop) => todo!(),
+            Statement::ArrayDecl(array_decls) => {
+                array_decls.generate_typed(program, function, for_scope)
+            }
+            Statement::If(if_statement) => if_statement
+                .generate_typed(program, function, for_scope)
+                .map(|v| vec![v]),
+            Statement::For(for_loop) => for_loop.generate_typed(program, function, for_scope).map(|v| vec![v]),
+            Statement::PackedDecl(_) => Ok(vec![]),
             Statement::Repeat(repeat_loop) => todo!(),
-            Statement::PackedDecl(packed_decl) => todo!(),
             Statement::Insert(insert) => todo!(),
             Statement::NoData(no_data_statement) => todo!(),
             Statement::Include(include) => todo!(),
@@ -189,6 +209,7 @@ impl TypedGenerator for FunctionDecl {
         self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         if let Some(func) = function {
             bail!("function declaration (here `{}`) inside another function (here `{}`) is not allowed", self.ident.name, func.name);
@@ -200,7 +221,7 @@ impl TypedGenerator for FunctionDecl {
         // TODO: think about adding check to see if this value is different from the one stored.
 
         for statement in self.statements {
-            let gen_statements = statement.generate_typed(program, &mut function)?;
+            let gen_statements = statement.generate_typed(program, &mut function, for_scope)?;
 
             statements.extend(gen_statements.into_iter());
         }
@@ -222,6 +243,7 @@ impl TypedGenerator for VarAssign {
         self,
         program: &mut AnalyzedProgram,
         function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
     ) -> anyhow::Result<Self::TypedOutput> {
         let mut res = vec![];
 
@@ -232,29 +254,136 @@ impl TypedGenerator for VarAssign {
             .into_iter()
             .filter_map(|(ident_path, v)| v.map(|v| (ident_path, v)))
         {
-            let (var_expr, var_type) = match name.generate_typed(program, function)?.value {
-                TypedExprValue::VariableAccess(var_access) => {
-                    let typing = var_access.var_type.clone();
+            let (var_expr, var_type) =
+                match name.generate_typed(program, function, for_scope)?.value {
+                    TypedExprValue::VariableAccess(var_access) => {
+                        let typing = var_access.var_type.clone();
 
-                    (Either::Left(var_access), typing)
-                }
-                TypedExprValue::FieldAccess(field_access) => {
-                    let typing = field_access.field_type.clone();
+                        (Either::Left(var_access), typing)
+                    }
+                    TypedExprValue::FieldAccess(field_access) => {
+                        let typing = field_access.field_type.clone();
 
-                    (Either::Right(field_access), typing)
-                }
-                _ => unreachable!(),
-            };
+                        (Either::Right(field_access), typing)
+                    }
+                    _ => unreachable!(),
+                };
 
             res.push(TypedStatement::new_void(TypedStatementInner::VarAssign(
                 TypedVarAssign {
                     var_expr,
                     var_type: var_type.clone(),
-                    value: value.generate_typed(program, function)?.cast_to(var_type)?,
+                    value: value
+                        .generate_typed(program, function, for_scope)?
+                        .cast_to(var_type)?,
                 },
             )));
         }
 
         Ok(res)
+    }
+}
+
+impl TypedGenerator for ArrayDecl {
+    type TypedOutput = TypedStatement;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        Ok(TypedStatement::new_void(TypedStatementInner::ArrayDecl(
+            TypedArrayDecl {
+                name: self.ident.name,
+                array_type: self.ident.ident_type.into(),
+                size: self
+                    .size
+                    .into_iter()
+                    .map(|v| v.generate_typed(program, function, for_scope))
+                    .collect::<anyhow::Result<Vec<TypedExpr>>>()?,
+            },
+        )))
+    }
+}
+
+impl TypedGenerator for If {
+    type TypedOutput = TypedStatement;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        let cond = self.cond.generate_typed(program, function, for_scope)?;
+        let statements = self
+            .statements
+            .generate_typed(program, function, for_scope)?
+            .concat();
+        let mut else_ifs = vec![];
+        let mut else_statements = None;
+
+        for otherwise in self.else_if.into_iter() {
+            match otherwise {
+                Otherwise::ElseIf { cond, statements } => else_ifs.push((
+                    cond.generate_typed(program, function, for_scope)?,
+                    statements
+                        .generate_typed(program, function, for_scope)?
+                        .concat(),
+                )),
+                Otherwise::Else { statements } => {
+                    else_statements = Some(
+                        statements
+                            .generate_typed(program, function, for_scope)?
+                            .concat(),
+                    )
+                }
+            }
+        }
+
+        Ok(TypedStatement::new_void(TypedStatementInner::If(TypedIf {
+            cond,
+            statements,
+            else_ifs,
+            else_statements,
+        })))
+    }
+}
+
+impl TypedGenerator for ForLoop {
+    type TypedOutput = TypedStatement;
+
+    fn generate_typed(
+        self,
+        program: &mut AnalyzedProgram,
+        function: &mut Option<FunctionInfo>,
+        for_scope: Option<&ForScope>,
+    ) -> anyhow::Result<Self::TypedOutput> {
+        Ok(TypedStatement::new_void(match self.mode {
+            ForLoopMode::Range { from, to } => TypedStatementInner::ForRange(TypedForRange {
+                name: self.name.name,
+                statements: self
+                    .statements
+                    .generate_typed(program, function, for_scope)?
+                    .concat(),
+                from: from.generate_typed(program, function, for_scope)?,
+                to: to.generate_typed(program, function, for_scope)?,
+            }),
+            ForLoopMode::Each { iterator } => {
+                // TODO: warn when iterator.ident_type is not None
+                let struct_typing = program.get_struct_info(&iterator.name)?.as_type();
+                let for_scope = ForScope::new(self.name.name.clone(), struct_typing, for_scope);
+
+                TypedStatementInner::ForEach(TypedForEach {
+                    name: self.name.name,
+                    statements: self
+                        .statements
+                        .generate_typed(program, function, Some(&for_scope))?
+                        .concat(),
+                    iterator: iterator.name,
+                })
+            }
+        }))
     }
 }
