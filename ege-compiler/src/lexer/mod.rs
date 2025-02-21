@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader, Read},
 };
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use serde::Serialize;
 
 const KEYWORDS: [&str; 37] = [
@@ -287,7 +287,7 @@ impl<R: Read> Tokenizer<R> {
                 None => {
                     return Err(anyhow!(
                         "Unexpected end of line while expecting string delimiter"
-                    ))
+                    ));
                 }
             }
         }

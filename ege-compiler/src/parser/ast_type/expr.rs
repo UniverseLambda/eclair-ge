@@ -1,14 +1,14 @@
 use std::io::Read;
 
-use anyhow::{bail, Context};
-use inkwell::{values::BasicValueEnum, AddressSpace};
+use anyhow::{Context, bail};
+use inkwell::{AddressSpace, values::BasicValueEnum};
 use log::{debug, trace};
 use serde::Serialize;
 
 use crate::{
     codegen::CodegenState,
     lexer::{TokenType, TokenTypeId},
-    parser::{expect_any_token_type, Parser},
+    parser::{Parser, expect_any_token_type},
 };
 
 use super::{FunctionCall, Ident, IdentPath, Parsable};

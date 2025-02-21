@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use crate::{
     lexer::TokenTypeId,
-    parser::{ext::TokenExt, Parser},
+    parser::{Parser, ext::TokenExt},
 };
 
 use super::{Expr, Parsable};

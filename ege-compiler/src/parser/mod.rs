@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use anyhow::{bail, Context, Ok, Result};
+use anyhow::{Context, Ok, Result, bail};
 pub use ast_type::{
     ArrayDecl, ArrayDecls, BinaryExpr, BinaryExprOp, Expr, ForLoop, ForLoopMode, FunctionCall,
     FunctionDecl, IdentPath, If, Include, Insert, InsertPivot, InsertRelPos, NoDataStatement,

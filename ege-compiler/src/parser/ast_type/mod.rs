@@ -33,7 +33,7 @@ use serde::Serialize;
 
 use crate::lexer::TokenTypeId;
 
-use super::{expect_token_content, expect_token_type, Parser};
+use super::{Parser, expect_token_content, expect_token_type};
 
 pub trait Parsable: Sized {
     fn parse(parser: &mut Parser<impl Read>) -> Result<Self>;

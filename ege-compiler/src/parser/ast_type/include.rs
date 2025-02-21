@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::{
     lexer::{TokenTypeId, Tokenizer},
-    parser::{ext::TokenExt, Parser},
+    parser::{Parser, ext::TokenExt},
 };
 
 use super::{Parsable, Program};

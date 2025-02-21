@@ -8,8 +8,8 @@ use crate::{
 };
 
 use super::{
-    analyze::{expect_typing, get_function_args_info, get_function_return_type, TypedGenerator},
     AnalyzedProgram, ForScope, FunctionInfo, Typing,
+    analyze::{TypedGenerator, expect_typing, get_function_args_info, get_function_return_type},
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -345,7 +345,11 @@ impl TypedGenerator for FunctionCall {
 
         for (idx, param) in params.iter().enumerate() {
             let Some(expected_param) = func_in.get(idx) else {
-                bail!("too many argument in call to `{name}`: expected at most {} arguments, but got only {} arguments", func_in.len(), params.len());
+                bail!(
+                    "too many argument in call to `{name}`: expected at most {} arguments, but got only {} arguments",
+                    func_in.len(),
+                    params.len()
+                );
             };
 
             expect_typing(&param.output_type, &expected_param.var_info.typing)?;
@@ -354,7 +358,9 @@ impl TypedGenerator for FunctionCall {
         if params.len() < func_in.len() {
             for (idx, to_fill) in func_in.iter().enumerate().skip(params.len()) {
                 let Some(ref default_value) = to_fill.default_value else {
-                    bail!("missing argument in call to `{name}`: no default value for argument at index {idx}");
+                    bail!(
+                        "missing argument in call to `{name}`: no default value for argument at index {idx}"
+                    );
                 };
 
                 params.push(default_value.generate_typed(program, function, for_scope)?);

@@ -5,7 +5,7 @@ use serde::Serialize;
 
 use crate::{
     lexer::TokenTypeId,
-    parser::{expect_token, Parser},
+    parser::{Parser, expect_token},
 };
 
 use super::{Expr, Parsable, Statement};
