@@ -1,7 +1,8 @@
 [package]
 name = "ege-runtime"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+license = "LGPL-3.0-or-later"
 
 [dependencies]
 winit = { version = "0.29", features = ["rwh_05"] }
