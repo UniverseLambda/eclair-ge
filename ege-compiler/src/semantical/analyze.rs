@@ -53,6 +53,9 @@ pub trait Analyzable {
 pub trait TypedGenerator {
     type TypedOutput;
 
+    /// The output of this method MUST be checked.
+    ///
+    /// Contract: every Ok(_) output is assumed to and MUST be right and sound, as in: no other checks will be done later.
     fn generate_typed(
         self,
         program: &mut AnalyzedProgram,

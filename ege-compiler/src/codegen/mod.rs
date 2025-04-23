@@ -1,12 +1,17 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, atomic::AtomicUsize},
-};
+use std::{cell::RefCell, collections::HashMap, sync::atomic::AtomicUsize};
 
 use anyhow::anyhow;
-use inkwell::{builder::Builder, context::Context, module::Module};
+use inkwell::{
+    builder::Builder,
+    context::Context,
+    module::Module,
+    values::{BasicValueEnum, FunctionValue},
+};
 
-use crate::semantical::Typing;
+use crate::semantical::{AnalyzedProgram, Typing};
+
+mod expr;
+mod func;
 
 #[derive(Debug, Clone, Copy)]
 pub struct CodegenState<'a, 'ctx> {
@@ -16,58 +21,74 @@ pub struct CodegenState<'a, 'ctx> {
 }
 
 #[derive(Debug)]
-pub struct CodegenScopeInfo {
-    pub functions: HashMap<String, FunctionPrototype>,
-    pub global_variables: HashMap<String, VariablePrototype>,
-    pub current_function: Option<String>,
-    pub loops: Vec<LoopDescriptor>,
+pub struct CodegenScopeInfo<'ctx> {
+    pub functions: HashMap<String, FunctionDef<'ctx>>,
+    pub global_variables: HashMap<String, VariableDef<'ctx>>,
+    pub current_function: RefCell<Option<String>>,
+    pub loops: Vec<LoopDescriptor<'ctx>>,
     pub loop_id: AtomicUsize,
 }
 
-impl CodegenScopeInfo {
-    pub fn get_function_prototype(&self, name: &String) -> anyhow::Result<&FunctionPrototype> {
+impl<'ctx> CodegenScopeInfo<'ctx> {
+    pub fn get_function_prototype(&self, name: &String) -> anyhow::Result<&FunctionDef> {
         self.functions
             .get(name)
             .ok_or_else(|| anyhow!("no function named `{name}`"))
     }
 
-    pub fn get_variable_prototype(&self, name: &String) -> anyhow::Result<&VariablePrototype> {
+    pub fn get_variable_prototype(&self, name: &String) -> anyhow::Result<&VariableDef> {
         self.loops
             .iter()
-            .rfind(|v| v.var.as_ref().map_or(false, |v| &v.name == name)).map(|v| v.var.as_ref().unwrap())
-            .or_else(|| self.current_function.as_ref().and_then(|v| {
-                self.functions.get(v).unwrap().args.iter().find(|v| &v.name == name)
-            }))
+            .rfind(|v| v.var.as_ref().map_or(false, |v| &v.name == name))
+            .map(|v| v.var.as_ref().unwrap())
+            .or_else(|| {
+                self.current_function.borrow().as_ref().and_then(|v| {
+                    self.functions
+                        .get(v)
+                        .unwrap()
+                        .args
+                        .iter()
+                        .find(|arg| &arg.name == name)
+                })
+            })
             .or_else(|| self.global_variables.get(name))
             .ok_or_else(|| anyhow!("no variable named `{name}`"))
     }
 }
 
 #[derive(Debug)]
-pub struct FunctionPrototype {
+pub struct FunctionDef<'ctx> {
     pub name: String,
     pub return_typing: Typing,
-    pub args: Vec<VariablePrototype>,
+    pub args: Vec<VariableDef<'ctx>>,
+    pub function: FunctionValue<'ctx>,
 }
 
 #[derive(Debug)]
-pub struct VariablePrototype {
+pub struct VariableDef<'ctx> {
     pub name: String,
-    pub typing: Typing,
+    pub value: BasicValueEnum<'ctx>,
 }
 
 #[derive(Debug)]
-pub struct LoopDescriptor {
+pub struct LoopDescriptor<'ctx> {
     pub loop_id: usize,
-    pub var: Option<VariablePrototype>,
+    pub var: Option<VariableDef<'ctx>>,
 }
 
-pub trait Codegen {
+pub trait Codegen<'a, 'ctx>
+where
+    'a: 'ctx,
+{
     type CodegenOutput;
 
     fn codegen(
         &self,
-        cg_state: CodegenState,
-        scope: &CodegenScopeInfo,
+        cg: CodegenState<'a, 'ctx>,
+        scope: &'a CodegenScopeInfo,
     ) -> anyhow::Result<Self::CodegenOutput>;
+}
+
+pub fn codegen(analyzed_program: AnalyzedProgram) -> anyhow::Result<()> {
+    todo!()
 }

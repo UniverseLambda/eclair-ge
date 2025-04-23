@@ -1,16 +1,16 @@
+mod analyze;
+mod expr;
+mod statement;
+
 use std::collections::HashMap;
 
 use analyze::TypedGenerator;
 use anyhow::{anyhow, bail};
-use expr::{TypedExpr, TypedExprValue};
+pub use expr::*;
 use serde::Serialize;
 use statement::TypedStatement;
 
 use crate::lexer::IdentTyping;
-
-mod analyze;
-mod expr;
-mod statement;
 
 pub use analyze::analyze_program;
 

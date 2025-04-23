@@ -145,7 +145,7 @@ pub enum TypedExprValue {
     Binary(TypedBinaryExpr),
     VariableAccess(VarAccess),
     FieldAccess(FieldAccess),
-    CollectionAcces(CollectionAccess),
+    CollectionAccess(CollectionAccess),
     AllocStruct(AllocStruct),
     Unary(Box<TypedExpr>, UnaryExprOp),
 
@@ -165,7 +165,7 @@ pub enum TypedExprValue {
 pub struct TypedFunctionCall {
     pub name: String,
     pub output_type: Typing,
-    pub params: Vec<TypedExpr>,
+    pub args: Vec<TypedExpr>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -277,7 +277,7 @@ impl TypedGenerator for Expr {
 
                 Ok(TypedExpr {
                     output_type: typing.clone(),
-                    value: TypedExprValue::CollectionAcces(CollectionAccess {
+                    value: TypedExprValue::CollectionAccess(CollectionAccess {
                         struct_name: ident.name,
                         last: false,
                         output_type: typing,
@@ -290,7 +290,7 @@ impl TypedGenerator for Expr {
 
                 Ok(TypedExpr {
                     output_type: typing.clone(),
-                    value: TypedExprValue::CollectionAcces(CollectionAccess {
+                    value: TypedExprValue::CollectionAccess(CollectionAccess {
                         struct_name: ident.name,
                         last: true,
                         output_type: typing,
@@ -370,7 +370,7 @@ impl TypedGenerator for FunctionCall {
         Ok(TypedFunctionCall {
             name,
             output_type: func_out,
-            params,
+            args: params,
         })
     }
 }
