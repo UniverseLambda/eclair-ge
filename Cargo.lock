@@ -506,6 +506,7 @@ dependencies = [
  "either",
  "inkwell",
  "log",
+ "paste",
  "serde",
  "serde_json",
 ]

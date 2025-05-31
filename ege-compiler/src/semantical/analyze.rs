@@ -23,6 +23,7 @@ macro_rules! builtin_function {
     (fn $name:ident($($arg:ident: $arg_type:ident $(= $default_value:expr)?),*) -> $ret_type:ident) => {{
         FunctionInfo {
             name: stringify!($name).into(),
+            cg_name: paste::paste! {stringify!( [< bb_ $name:snake >] ) }.into(),
             args: vec![$(
                 ArgInfo {
                     var_info: VarInfo {
@@ -436,6 +437,7 @@ impl Analyzable for FunctionDecl {
 
         let mut func_info = Some(FunctionInfo {
             name: self.ident.name.clone(),
+            cg_name: self.ident.name.clone(),
             return_type: self.ident.ident_type.clone().into(),
             args,
             vars: HashMap::new(),

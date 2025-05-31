@@ -4,16 +4,13 @@ use crate::semantical::{TypedReturn, TypedStatement, TypedStatementInner, TypedV
 
 use super::Codegen;
 
-impl<'a, 'ctx> Codegen<'a, 'ctx> for TypedStatement
-where
-    'a: 'ctx,
-{
+impl<'ctx> Codegen<'ctx> for TypedStatement {
     type CodegenOutput = ();
 
     fn codegen(
         &self,
-        cg: super::CodegenState<'a, 'ctx>,
-        scope: &'a super::CodegenScopeInfo,
+        cg: super::CodegenState<'_, 'ctx>,
+        scope: &super::CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
         match &self.inner {
             TypedStatementInner::FunctionCall(typed_function_call) => {
@@ -37,16 +34,13 @@ where
     }
 }
 
-impl<'a, 'ctx> Codegen<'a, 'ctx> for TypedVarAssign
-where
-    'a: 'ctx,
-{
+impl<'ctx> Codegen<'ctx> for TypedVarAssign {
     type CodegenOutput = InstructionValue<'ctx>;
 
     fn codegen(
         &self,
-        cg: super::CodegenState<'a, 'ctx>,
-        scope: &'a super::CodegenScopeInfo,
+        cg: super::CodegenState<'_, 'ctx>,
+        scope: &super::CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
         let var = match &self.var_expr {
             either::Either::Left(l) => l.codegen(cg, scope)?,
@@ -59,16 +53,13 @@ where
     }
 }
 
-impl<'a, 'ctx> Codegen<'a, 'ctx> for TypedReturn
-where
-    'a: 'ctx,
-{
+impl<'ctx> Codegen<'ctx> for TypedReturn {
     type CodegenOutput = InstructionValue<'ctx>;
 
     fn codegen(
         &self,
-        cg: super::CodegenState<'a, 'ctx>,
-        scope: &'a super::CodegenScopeInfo,
+        cg: super::CodegenState<'_, 'ctx>,
+        scope: &super::CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
         let value = self
             .value

@@ -68,6 +68,7 @@ impl StructInfo {
 #[derive(Clone, Debug, Serialize)]
 pub struct FunctionInfo {
     pub name: String,
+    pub cg_name: String,
     pub return_type: Typing,
     pub args: Vec<ArgInfo>,
     pub vars: HashMap<String, VarInfo>,

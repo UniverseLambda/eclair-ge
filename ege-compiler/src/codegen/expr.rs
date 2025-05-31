@@ -1,5 +1,6 @@
 use std::ffi::CString;
 
+use anyhow::bail;
 use either::Either;
 use inkwell::{
     FloatPredicate, IntPredicate,
@@ -15,16 +16,13 @@ use crate::{
 
 use super::{Codegen, CodegenScopeInfo, CodegenState};
 
-impl<'a, 'ctx> Codegen<'a, 'ctx> for TypedExpr
-where
-    'a: 'ctx,
-{
+impl<'ctx> Codegen<'ctx> for TypedExpr {
     type CodegenOutput = inkwell::values::BasicValueEnum<'ctx>;
 
     fn codegen(
         &self,
-        cg: CodegenState<'a, 'ctx>,
-        scope: &'a CodegenScopeInfo,
+        cg: CodegenState<'_, 'ctx>,
+        scope: &CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
         Ok(match &self.value {
             TypedExprValue::String(v) => cg
@@ -72,16 +70,13 @@ where
     }
 }
 
-impl<'a, 'ctx> Codegen<'a, 'ctx> for TypedBinaryExpr
-where
-    'a: 'ctx,
-{
+impl<'ctx> Codegen<'ctx> for TypedBinaryExpr {
     type CodegenOutput = BasicValueEnum<'ctx>;
 
     fn codegen(
         &self,
-        cg_state: CodegenState<'a, 'ctx>,
-        scope: &'a CodegenScopeInfo,
+        cg_state: CodegenState<'_, 'ctx>,
+        scope: &CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
         let lhs = self.left.codegen(cg_state, scope)?;
         let rhs = self.right.codegen(cg_state, scope)?;
@@ -173,35 +168,31 @@ where
     }
 }
 
-impl<'a, 'ctx> Codegen<'a, 'ctx> for VarAccess
-where
-    'a: 'ctx,
-{
+impl<'ctx> Codegen<'ctx> for VarAccess {
     type CodegenOutput = BasicValueEnum<'ctx>;
 
     fn codegen(
         &self,
-        _: CodegenState<'a, 'ctx>,
-        scope: &'a CodegenScopeInfo,
+        _: CodegenState<'_, 'ctx>,
+        scope: &CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
-        let var_def = scope.get_variable_prototype(&self.var_name)?;
-
-        Ok(var_def.value)
+        Ok(scope.get_variable_value(&self.var_name)?)
     }
 }
 
-impl<'a, 'ctx> Codegen<'a, 'ctx> for TypedFunctionCall
-where
-    'a: 'ctx,
-{
+impl<'ctx> Codegen<'ctx> for TypedFunctionCall {
     type CodegenOutput = CallSiteValue<'ctx>;
 
     fn codegen(
         &self,
-        cg_state: CodegenState<'a, 'ctx>,
-        scope: &'a CodegenScopeInfo,
+        cg_state: CodegenState<'_, 'ctx>,
+        scope: &CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
-        let func = cg_state.module.get_function(&self.name).unwrap();
+        let cg_name = scope.get_function_cg_name(&self.name)?;
+
+        let Some(func) = cg_state.module.get_function(&cg_name) else {
+            bail!("undefined function {}", &self.name);
+        };
 
         let mut args = vec![];
 
@@ -213,16 +204,13 @@ where
     }
 }
 
-impl<'a, 'ctx> Codegen<'a, 'ctx> for Constant
-where
-    'a: 'ctx,
-{
+impl<'ctx> Codegen<'ctx> for Constant {
     type CodegenOutput = BasicValueEnum<'ctx>;
 
     fn codegen(
         &self,
-        cg: CodegenState<'a, 'ctx>,
-        scope: &'a CodegenScopeInfo,
+        cg: CodegenState<'_, 'ctx>,
+        scope: &CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
         match self {
             Constant::Float(f) => TypedExpr::new(Typing::Float, TypedExprValue::Float(*f)),
