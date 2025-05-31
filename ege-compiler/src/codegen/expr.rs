@@ -1,11 +1,15 @@
 use std::ffi::CString;
 
-use inkwell::{FloatPredicate, IntPredicate, values::BasicValueEnum};
+use either::Either;
+use inkwell::{
+    FloatPredicate, IntPredicate,
+    values::{BasicValueEnum, CallSiteValue, InstructionValue},
+};
 
 use crate::{
     parser::BinaryExprOp,
     semantical::{
-        TypedBinaryExpr, TypedExpr, TypedExprValue, TypedFunctionCall, Typing, VarAccess,
+        Constant, TypedBinaryExpr, TypedExpr, TypedExprValue, TypedFunctionCall, Typing, VarAccess,
     },
 };
 
@@ -24,15 +28,17 @@ where
     ) -> anyhow::Result<Self::CodegenOutput> {
         Ok(match &self.value {
             TypedExprValue::String(v) => cg
-                .context
-                .const_string(CString::new(v.as_str()).unwrap().as_bytes(), true)
+                .builder
+                .build_global_string_ptr(v.as_str(), "const_str")? // TODO: make one global string per unique string
+                .as_pointer_value()
                 .into(),
             TypedExprValue::Integer(v) => cg.context.i64_type().const_int(*v as u64, true).into(),
             TypedExprValue::Float(v) => cg.context.f64_type().const_float(*v).into(),
             TypedExprValue::Null => cg.context.i64_type().const_zero().into(),
             TypedExprValue::FunctionCall(typed_function_call) => typed_function_call
                 .codegen(cg, scope)?
-                .expect("tried to get the return value of a void function"), // FIXME: Check during semantical analysis whether the code function called in an Expr is void
+                .try_as_basic_value()
+                .expect_left("tried to get the return value of a void function"), // FIXME: Check during semantical analysis whether the code function called in an Expr is void
             TypedExprValue::Binary(typed_binary_expr) => typed_binary_expr.codegen(cg, scope)?,
             TypedExprValue::VariableAccess(var_access) => var_access.codegen(cg, scope)?,
             TypedExprValue::FieldAccess(field_access) => todo!(),
@@ -188,7 +194,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> for TypedFunctionCall
 where
     'a: 'ctx,
 {
-    type CodegenOutput = Option<BasicValueEnum<'ctx>>;
+    type CodegenOutput = CallSiteValue<'ctx>;
 
     fn codegen(
         &self,
@@ -203,14 +209,27 @@ where
             args.push(arg.codegen(cg_state, scope)?.into());
         }
 
-        let call_v = cg_state
-            .builder
-            .build_call(func, &args, "func_call")?
-            .try_as_basic_value();
+        Ok(cg_state.builder.build_call(func, &args, "func_call")?)
+    }
+}
 
-        match call_v {
-            either::Either::Left(v) => Ok(Some(v)),
-            either::Either::Right(v) => Ok(None),
+impl<'a, 'ctx> Codegen<'a, 'ctx> for Constant
+where
+    'a: 'ctx,
+{
+    type CodegenOutput = BasicValueEnum<'ctx>;
+
+    fn codegen(
+        &self,
+        cg: CodegenState<'a, 'ctx>,
+        scope: &'a CodegenScopeInfo,
+    ) -> anyhow::Result<Self::CodegenOutput> {
+        match self {
+            Constant::Float(f) => TypedExpr::new(Typing::Float, TypedExprValue::Float(*f)),
+            Constant::Int(i) => TypedExpr::new(Typing::Integer, TypedExprValue::Integer(*i)),
+            Constant::String(s) => TypedExpr::new(Typing::Float, TypedExprValue::String(s.clone())),
+            Constant::Null => TypedExpr::new_null(),
         }
+        .codegen(cg, scope)
     }
 }

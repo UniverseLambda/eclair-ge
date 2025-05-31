@@ -36,7 +36,7 @@ where
         }
 
         for statement in self.statements.iter() {
-            statement.codegen(cg, scope);
+            statement.codegen(cg, scope)?;
         }
 
         Ok(func)

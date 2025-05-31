@@ -15,6 +15,9 @@ pub struct Cli {
     /// To output the AST (parser and semantical analysis results) in JSON format
     #[arg(short, long, default_value_t = false)]
     json_dump: bool,
+    /// To output the LLVM IR
+    #[arg(short, long, default_value_t = false)]
+    llvm_ir_dump: bool,
     /// Output path [default: a.out]
     #[arg(short, long)]
     output: Option<std::path::PathBuf>,
@@ -96,6 +99,10 @@ fn main() {
 
         std::fs::write(new_file_name, content).expect("Could not write JSON output");
     }
+
+    // if args.llvm_ir_dump {
+    //     let content =
+    // }
 
     let duration = SystemTime::now().duration_since(start_time).unwrap();
 

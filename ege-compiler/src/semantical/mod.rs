@@ -8,7 +8,7 @@ use analyze::TypedGenerator;
 use anyhow::{anyhow, bail};
 pub use expr::*;
 use serde::Serialize;
-use statement::TypedStatement;
+pub use statement::*;
 
 use crate::lexer::IdentTyping;
 
