@@ -1,10 +1,8 @@
-use std::ffi::CString;
 
 use anyhow::bail;
-use either::Either;
 use inkwell::{
     FloatPredicate, IntPredicate,
-    values::{BasicValueEnum, CallSiteValue, InstructionValue},
+    values::{BasicValueEnum, CallSiteValue},
 };
 
 use crate::{
@@ -176,7 +174,7 @@ impl<'ctx> Codegen<'ctx> for VarAccess {
         _: CodegenState<'_, 'ctx>,
         scope: &CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
-        Ok(scope.get_variable_value(&self.var_name)?)
+        scope.get_variable_value(&self.var_name)
     }
 }
 

@@ -176,10 +176,8 @@ pub fn insert_or_ignore_variable(
         if !func.vars.contains_key(&var_info.name) {
             func.vars.insert(var_info.name.clone(), var_info);
         }
-    } else {
-        if !program.global_vars.contains_key(&var_info.name) {
-            program.global_vars.insert(var_info.name.clone(), var_info);
-        }
+    } else if !program.global_vars.contains_key(&var_info.name) {
+        program.global_vars.insert(var_info.name.clone(), var_info);
     }
 }
 

@@ -100,7 +100,7 @@ fn main() {
         std::fs::write(new_file_name, content).expect("Could not write JSON output");
     }
 
-    let codegen = match codegen::codegen(analyzed_program) {
+    match codegen::codegen(analyzed_program) {
         Ok(v) => v,
         Err(err) => {
             error!("{}", err.root_cause());

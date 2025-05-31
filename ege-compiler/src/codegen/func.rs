@@ -2,10 +2,7 @@ use std::time::SystemTime;
 
 use inkwell::{AddressSpace, types::BasicMetadataTypeEnum, values::FunctionValue};
 
-use crate::{
-    parser::FunctionCall,
-    semantical::{ArgInfo, FunctionInfo, Typing},
-};
+use crate::semantical::{ArgInfo, FunctionInfo, Typing};
 
 use super::{Codegen, CodegenScopeInfo, CodegenState, CurrentFunction, VariableDef};
 
@@ -17,7 +14,7 @@ impl<'ctx> Codegen<'ctx> for FunctionInfo {
         cg: CodegenState<'_, 'ctx>,
         scope: &CodegenScopeInfo<'ctx>,
     ) -> anyhow::Result<Self::CodegenOutput> {
-        let (func, current_func) = gen_proto(&self, cg)?;
+        let (func, current_func) = gen_proto(self, cg)?;
 
         let bb = cg
             .context
@@ -81,7 +78,7 @@ pub fn gen_proto<'a, 'ctx>(
         arg.set_name(&name);
         curr.variables.push(VariableDef {
             name,
-            value: arg.clone(),
+            value: arg,
         });
     }
 

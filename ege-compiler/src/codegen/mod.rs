@@ -1,5 +1,5 @@
 use std::{
-    cell::{OnceCell, RefCell},
+    cell::RefCell,
     collections::HashMap,
     sync::atomic::AtomicUsize,
 };
@@ -9,7 +9,7 @@ use inkwell::{
     builder::Builder,
     context::Context,
     module::Module,
-    values::{BasicValueEnum, FunctionValue},
+    values::BasicValueEnum,
 };
 use log::debug;
 
@@ -61,17 +61,17 @@ impl<'ctx> CodegenScopeInfo<'ctx> {
     pub fn get_variable_value(&self, name: &String) -> anyhow::Result<BasicValueEnum<'ctx>> {
         self.loops
             .iter()
-            .rfind(|v| v.var.as_ref().map_or(false, |v| &v.name == name))
-            .map(|v| v.var.as_ref().unwrap().value.clone())
+            .rfind(|v| v.var.as_ref().is_some_and(|v| &v.name == name))
+            .map(|v| v.var.as_ref().unwrap().value)
             .or_else(|| {
                 self.current_function.borrow().as_ref().and_then(|v| {
                     v.variables
                         .iter()
                         .find(|v| &v.name == name)
-                        .map(|v| v.value.clone())
+                        .map(|v| v.value)
                 })
             })
-            .or_else(|| self.global_variables.get(name).map(|v| v.value.clone()))
+            .or_else(|| self.global_variables.get(name).map(|v| v.value))
             .ok_or_else(|| anyhow!("no variable named `{name}`"))
     }
 }
@@ -187,7 +187,7 @@ pub fn codegen(analyzed_program: AnalyzedProgram) -> anyhow::Result<()> {
     }
 
     for (_, func) in analyzed_program.functions.iter() {
-        func.codegen(cg.clone(), &global_scope)?;
+        func.codegen(cg, &global_scope)?;
     }
 
     let main = FunctionInfo {

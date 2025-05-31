@@ -1,6 +1,6 @@
-use inkwell::values::{AnyValue, BasicValue, BasicValueEnum, InstructionValue};
+use inkwell::values::InstructionValue;
 
-use crate::semantical::{TypedReturn, TypedStatement, TypedStatementInner, TypedVarAssign, Typing};
+use crate::semantical::{TypedReturn, TypedStatement, TypedStatementInner, TypedVarAssign};
 
 use super::Codegen;
 
